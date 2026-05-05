@@ -4,10 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Starship Remit - Web3 P2E</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="application/javascript"></script>
-
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,7 +13,7 @@
   #gameWrapper { position: relative; width: 480px; height: 700px; max-height: 100vh; max-width: 100vw; background: #000; }
   canvas { display: block; background: #000; border: 1px solid #0ff3; box-shadow: 0 0 20px #0ff2; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
   
-  .ui-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+  .ui-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; display: flex; justify-content: center; align-items: center; }
   .screen { pointer-events: auto; position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.97); gap: 12px; padding: 20px; overflow-y: auto; }
   .hidden { display: none !important; }
 
@@ -23,12 +21,12 @@
   .sub-text { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #0af8; letter-spacing: 0.2em; pointer-events: none; }
   
   .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 300px; margin-top: 10px; }
-  .btn { font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.8rem; color: #000; background: linear-gradient(135deg, #0ff 0%, #0af 100%); border: none; padding: 14px 10px; cursor: pointer; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%); box-shadow: 0 0 10px #0ff4; text-transform: uppercase; transition: transform 0.1s; width: 100%; }
+  .btn { font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.8rem; color: #000; background: linear-gradient(135deg, #0ff 0%, #0af 100%); border: none; padding: 14px 10px; cursor: pointer; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%); box-shadow: 0 0 10px #0ff4; text-transform: uppercase; width: 100%; }
   .btn:active { transform: scale(0.95); }
   .btn-gold { background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); }
   .btn-red { background: linear-gradient(135deg, #f44 0%, #a00 100%); color: #fff; }
   .btn-sm { padding: 8px 6px; font-size: 0.65rem; width: auto; }
-  .btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; transform: none; }
+  .btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
 
   .store-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #0ff3; padding-bottom: 5px;}
   .item-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 15px; }
@@ -37,8 +35,7 @@
   .item-icon { font-size: 1.5rem; margin-bottom: 4px; pointer-events: none; }
   .item-name { font-size: 0.55rem; color: #aaa; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
   .item-price { font-size: 0.55rem; color: #ffd700; margin-bottom: 6px; pointer-events: none; }
-  .wallet-status { font-size: 0.7rem; color: #f88; margin-top: 5px; font-family: 'Share Tech Mono', monospace; pointer-events: none; }
-  
+  .wallet-status { font-size: 0.7rem; color: #f88; margin-top: 5px; font-family: 'Share Tech Mono', monospace; pointer-events: none; text-align: center; }
   .stat-row { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #0f8; text-align: center; pointer-events: none; }
   .go-title { font-weight: 900; font-size: 1.8rem; color: #f44; text-shadow: 0 0 20px #f44; pointer-events: none; }
   
@@ -53,85 +50,61 @@
   <canvas id="gameCanvas" width="480" height="700"></canvas>
   
   <div class="ui-layer" id="uiLayer">
-    
     <!-- MAIN MENU -->
     <div class="screen" id="mainMenu">
       <div class="game-title">STARSHIP<br>REMIT</div>
       <div class="sub-text">// COMMAND CENTER //</div>
-      
       <div class="wallet-status" id="walletStatus">⚠ Connect Wallet to Play</div>
-      
-      <button class="btn btn-red" id="connectBtn" onclick="connectWallet()">🔓 CONNECT WALLET</button>
-      
+      <button class="btn btn-red" id="connectBtn">🔓 CONNECT WALLET</button>
       <div class="menu-grid">
-        <button class="btn hidden" id="playBtn" onclick="startGame()">▶ PLAY GAME</button>
-        <button class="btn btn-gold hidden" id="storeBtn" onclick="showScreen('storeScreen')">🛒 STORE</button>
-        <button class="btn hidden" id="inventoryBtn" onclick="showScreen('inventoryScreen')">💼 NFTS</button>
-        <button class="btn hidden" id="withdrawMenuBtn" onclick="showClaimScreen()">💰 CLAIM DRC</button>
+        <button class="btn hidden" id="playBtn">▶ PLAY GAME</button>
+        <button class="btn btn-gold hidden" id="storeBtn">🛒 STORE</button>
+        <button class="btn hidden" id="inventoryBtn">💼 NFTS</button>
+        <button class="btn hidden" id="withdrawMenuBtn">💰 CLAIM DRC</button>
       </div>
     </div>
 
     <!-- STORE -->
     <div class="screen hidden" id="storeScreen">
-      <div class="store-header">
-        <span style="color:#0ff; font-size:1rem;">🛒 MARKETPLACE</span>
-        <button class="btn btn-sm" onclick="showScreen('mainMenu')">← BACK</button>
-      </div>
-      
+      <div class="store-header"><span style="color:#0ff; font-size:1rem;">🛒 MARKETPLACE</span><button class="btn btn-sm" id="backFromStore">← BACK</button></div>
       <div class="sub-text">STARSHIPS</div>
       <div class="item-grid">
         <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">Standard</div><div class="item-price" style="color:#0f8;">FREE</div><button class="btn btn-sm" disabled>EQUIPPED</button></div>
-        <div class="item-card"><div class="item-icon">✈️</div><div class="item-name">Neon Viper</div><div class="item-price">500 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'neon', 500)">BUY</button></div>
-        <div class="item-card"><div class="item-icon">🛸</div><div class="item-name">Void Cruiser</div><div class="item-price">0.1 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'void', 0.1, 'BNB')">BUY</button></div>
-        <div class="item-card"><div class="item-icon">🌀</div><div class="item-name">Galaxy Destroyer</div><div class="item-price">1500 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'galaxy', 1500)">BUY</button></div>
-        <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Phoenix</div><div class="item-price">0.5 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'phoenix', 0.5, 'BNB')">BUY</button></div>
-        <div class="item-card"><div class="item-icon">💎</div><div class="item-name">Diamond Frame</div><div class="item-price">$5.00 USD</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'diamond', 5, 'USD')">BUY</button></div>
+        <div class="item-card"><div class="item-icon">✈️</div><div class="item-name">Neon Viper</div><div class="item-price">500 DRC</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="neon" data-amt="500">BUY</button></div>
+        <div class="item-card"><div class="item-icon">🛸</div><div class="item-name">Void Cruiser</div><div class="item-price">0.1 BNB</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="void" data-amt="0.1" data-curr="BNB">BUY</button></div>
+        <div class="item-card"><div class="item-icon">🌀</div><div class="item-name">Galaxy</div><div class="item-price">1500 DRC</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="galaxy" data-amt="1500">BUY</button></div>
+        <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Phoenix</div><div class="item-price">0.5 BNB</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="phoenix" data-amt="0.5" data-curr="BNB">BUY</button></div>
+        <div class="item-card"><div class="item-icon">💎</div><div class="item-name">Diamond</div><div class="item-price">$5 USD</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="diamond" data-amt="5" data-curr="USD">BUY</button></div>
       </div>
-
       <div class="sub-text">WEAPONS</div>
       <div class="item-grid">
         <div class="item-card owned"><div class="item-icon">💚</div><div class="item-name">Laser</div><div class="item-price" style="color:#0f8;">FREE</div><button class="btn btn-sm" disabled>EQUIPPED</button></div>
-        <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Plasma</div><div class="item-price">1000 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'plasma', 1000)">BUY</button></div>
-        <div class="item-card"><div class="item-icon">⚡</div><div class="item-name">Railgun</div><div class="item-price">0.2 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'rail', 0.2, 'BNB')">BUY</button></div>
-        <div class="item-card"><div class="item-icon">❄️</div><div class="item-name">Cryo Beam</div><div class="item-price">2000 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'cryo', 2000)">BUY</button></div>
-        <div class="item-card"><div class="item-icon">☠️</div><div class="item-name">Inferno</div><div class="item-price">1 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'inferno', 1, 'BNB')">BUY</button></div>
-        <div class="item-card"><div class="item-icon">🌈</div><div class="item-name">Prismatic</div><div class="item-price">$10 USD</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'prismatic', 10, 'USD')">BUY</button></div>
+        <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Plasma</div><div class="item-price">1000 DRC</div><button class="btn btn-sm btn-gold buy-btn" data-type="weapon" data-id="plasma" data-amt="1000">BUY</button></div>
+        <div class="item-card"><div class="item-icon">⚡</div><div class="item-name">Railgun</div><div class="item-price">0.2 BNB</div><button class="btn btn-sm btn-gold buy-btn" data-type="weapon" data-id="rail" data-amt="0.2" data-curr="BNB">BUY</button></div>
       </div>
     </div>
 
     <!-- INVENTORY & OPENSEA -->
     <div class="screen hidden" id="inventoryScreen">
-      <div class="store-header">
-        <span style="color:#0ff; font-size:1rem;">💼 MY NFTS</span>
-        <button class="btn btn-sm" onclick="showScreen('mainMenu')">← BACK</button>
-      </div>
+      <div class="store-header"><span style="color:#0ff; font-size:1rem;">💼 MY NFTS</span><button class="btn btn-sm" id="backFromInv">← BACK</button></div>
       <div id="inventoryList" class="item-grid" style="margin-top:20px;">
-        <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">Standard Ship</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
+        <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">Standard</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
         <div class="item-card owned"><div class="item-icon">💚</div><div class="item-name">Laser</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
       </div>
-      
-      <!-- OPENSEA LINK -->
       <div class="sub-text" style="margin-top:20px; color:#fff;">BUY & TRADE ON OPENSEA</div>
-      <a href="https://opensea.io/StarshipRemit" target="_blank" class="opensea-banner">
-        <span>🌊</span> View Starship Remit Collection
-      </a>
+      <a href="https://opensea.io/StarshipRemit" target="_blank" class="opensea-banner"><span>🌊</span> View Collection</a>
     </div>
 
     <!-- CLAIM DRC DASHBOARD -->
     <div class="screen hidden" id="claimScreen">
-      <div class="store-header">
-        <span style="color:#ffd700; font-size:1rem;">💰 DRC EARNINGS</span>
-        <button class="btn btn-sm" onclick="showScreen('mainMenu')">← BACK</button>
-      </div>
-      
+      <div class="store-header"><span style="color:#ffd700; font-size:1rem;">💰 DRC EARNINGS</span><button class="btn btn-sm" id="backFromClaim">← BACK</button></div>
       <div class="claim-box">
         <div class="sub-text">AVAILABLE BALANCE</div>
         <div class="drc-amount" id="claimDrcAmount">0.000 DRC</div>
         <div class="sub-text" style="font-size:0.6rem; color:#888;">Connected Wallet:</div>
-        <div class="wallet-status" id="claimWalletAddress" style="color:#0ff; word-break:break-all; font-size:0.65rem; margin-top:5px;">0x000...000</div>
-        
-        <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;" onclick="handleWithdraw()">WITHDRAW TO BSC WALLET</button>
-        <div class="sub-text hidden" id="withdrawWarn" style="color:#f88; font-size:0.6rem; margin-top:10px;">⚠️ You need 10,000 DRC to withdraw.</div>
+        <div class="wallet-status" id="claimWalletAddress" style="color:#0ff; word-break:break-all; font-size:0.6rem; margin-top:5px;">0x000...000</div>
+        <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;">WITHDRAW TO BSC</button>
+        <div class="sub-text hidden" id="withdrawWarn" style="color:#f88; font-size:0.6rem; margin-top:10px;">Need 10,000 DRC.</div>
       </div>
     </div>
 
@@ -141,30 +114,52 @@
       <div class="stat-row">Level: <span id="goLevel" style="color:#f44;">1</span></div>
       <div class="stat-row">Score: <span id="goScore">0</span></div>
       <div class="stat-row">DRC Earned: <span id="goDRC" style="color:#0ff;">0.000</span></div>
-      <button class="btn" onclick="startGame()">PLAY AGAIN</button>
-      <button class="btn btn-sm" onclick="showScreen('mainMenu')">MENU</button>
+      <button class="btn" id="playAgainBtn">PLAY AGAIN</button>
+      <button class="btn btn-sm" id="menuFromOver">MENU</button>
     </div>
-
   </div>
 </div>
 
 <script>
+// --- SAFELY LOAD DEPENDENCIES ---
 let db;
-try { db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC'); } catch(e) {}
+try { db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC'); } catch(e) { console.error(e); }
 
 let playerWallet = null; let totalSavedScore = 0; let savedDRC = 0;
 let myItems = { ship: 'standard', weapon: 'laser' }; 
-const itemColors = { 
-  ship: { standard: '#0af3', neon: '#f0f', void: '#808', galaxy: '#48f', phoenix: '#f80', diamond: '#0ff' }, 
-  weapon: { laser: '#0f0', plasma: '#f80', rail: '#08f', cryo: '#8ff', inferno: '#f00', prismatic: '#f0f' } 
-};
+const itemColors = { ship: { standard: '#0af3', neon: '#f0f', void: '#808', galaxy: '#48f', phoenix: '#f80', diamond: '#0ff' }, weapon: { laser: '#0f0', plasma: '#f80', rail: '#08f' } };
 
+// --- UI LOGIC (SAFE, NO CRASHES) ---
 function showScreen(id) {
-  document.querySelectorAll('.ui-layer > .screen').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
 window.onload = function() {
+  // Attach button events safely
+  document.getElementById('connectBtn').addEventListener('click', connectWallet);
+  document.getElementById('playBtn').addEventListener('click', startGame);
+  document.getElementById('storeBtn').addEventListener('click', () => showScreen('storeScreen'));
+  document.getElementById('inventoryBtn').addEventListener('click', () => showScreen('inventoryScreen'));
+  document.getElementById('withdrawMenuBtn').addEventListener('click', showClaimScreen);
+  document.getElementById('backFromStore').addEventListener('click', () => showScreen('mainMenu'));
+  document.getElementById('backFromInv').addEventListener('click', () => showScreen('mainMenu'));
+  document.getElementById('backFromClaim').addEventListener('click', () => showScreen('mainMenu'));
+  document.getElementById('playAgainBtn').addEventListener('click', startGame);
+  document.getElementById('menuFromOver').addEventListener('click', () => showScreen('mainMenu'));
+  document.getElementById('withdrawNowBtn').addEventListener('click', handleWithdraw);
+
+  // Attach store buy buttons
+  document.querySelectorAll('.buy-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      if(!playerWallet) return alert("Connect wallet first!");
+      alert(`Mock TX: Buy ${this.dataset.id}`);
+      myItems[this.dataset.type] = this.dataset.id;
+      showScreen('inventoryScreen');
+    });
+  });
+
+  // Auto-login if already connected
   if (typeof window.ethereum !== 'undefined') {
     window.ethereum.request({ method: 'eth_accounts' }).then(accs => { if (accs.length > 0) setupWalletUI(accs[0]); }).catch(()=>{});
   }
@@ -175,22 +170,18 @@ async function connectWallet() {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       if (accounts.length > 0) setupWalletUI(accounts[0]);
-    } catch (err) { alert("Connection rejected."); }
+    } catch (err) { alert("Rejected."); }
   } else {
-    alert("NO WALLET DETECTED.\n\n1. PC: Install MetaMask.\n2. Mobile: Open this URL inside Trust Wallet DApp Browser.");
+    alert("NO WALLET.\n\n1. PC: Install MetaMask.\n2. Mobile: Open in Trust Wallet DApp browser.");
   }
 }
 
 async function setupWalletUI(address) {
   playerWallet = address;
-  const shortAddr = playerWallet.substring(0, 6) + '...' + playerWallet.substring(38);
-  document.getElementById('walletStatus').innerText = '✅ Connected: ' + shortAddr;
+  document.getElementById('walletStatus').innerText = '✅ Connected: ' + playerWallet.substring(0, 6) + '...';
   document.getElementById('walletStatus').style.color = '#0f8';
-  
-  // Hide connect, Show game buttons
   document.getElementById('connectBtn').classList.add('hidden');
   ['playBtn', 'storeBtn', 'inventoryBtn', 'withdrawMenuBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-  
   if(db) {
     const { data } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
     if (data) { totalSavedScore = data.total_score; savedDRC = data.drc_balance || 0; } 
@@ -203,119 +194,107 @@ async function showClaimScreen() {
   showScreen('claimScreen');
   document.getElementById('claimWalletAddress').innerText = playerWallet;
   document.getElementById('claimDrcAmount').innerText = savedDRC.toFixed(3) + " DRC";
-  
-  if (savedDRC >= 10000) {
-    document.getElementById('withdrawNowBtn').classList.remove('hidden');
-    document.getElementById('withdrawWarn').classList.add('hidden');
-  } else {
-    document.getElementById('withdrawNowBtn').classList.add('hidden');
-    document.getElementById('withdrawWarn').classList.remove('hidden');
-    document.getElementById('withdrawWarn').innerText = `⚠️ You need 10,000 DRC to withdraw. You currently have ${savedDRC.toFixed(3)} DRC. Keep playing!`;
-  }
+  if (savedDRC >= 10000) { document.getElementById('withdrawNowBtn').classList.remove('hidden'); document.getElementById('withdrawWarn').classList.add('hidden'); } 
+  else { document.getElementById('withdrawNowBtn').classList.add('hidden'); document.getElementById('withdrawWarn').classList.remove('hidden'); document.getElementById('withdrawWarn').innerText = `Need 10k DRC. You have ${savedDRC.toFixed(3)} DRC.`; }
 }
 
-function handleWithdraw() {
-  if(savedDRC >= 10000) {
-    alert(`SUCCESS! 10,000 DRC will be sent to your BSC wallet within 24 hours.\n(Note: Real automatic payouts require your backend Node.js script in Phase 4)`);
-  }
-}
+function handleWithdraw() { if(savedDRC >= 10000) alert("SUCCESS! 10,000 DRC processing to BSC wallet."); }
 
-function buyItem(type, id, amount, currency = 'DRC') {
-  if(!playerWallet) return alert("Connect wallet first!");
-  let payStr = currency === 'DRC' ? `${amount} DRC` : currency === 'BNB' ? `${amount} BNB` : `$${amount} USD`;
-  alert(`Mock Transaction: ${payStr} for ${id.toUpperCase()} ${type}.\n(Requires Smart Contract deployment)`);
-  myItems[type] = id; updateInventoryUI(); showScreen('inventoryScreen');
-}
-
-function updateInventoryUI() {
-  document.getElementById('inventoryList').innerHTML = `
-    <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">${myItems.ship.toUpperCase()}</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
-    <div class="item-card owned"><div class="item-icon">💎</div><div class="item-name">${myItems.weapon.toUpperCase()}</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
-  `;
-}
-
-// --- GAME ENGINE ---
-let shipConfig = { speed: 8, fireRate: 200, damage: 1, coinMagnet: 0 };
+// --- GAME ENGINE (100% COMPATIBLE) ---
+let shipConfig = { speed: 8, fireRate: 200, damage: 1 };
 const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
-let state = 'start', score = 0, currentLevel = 1;
-const ship = { x: W / 2, y: H - 60, w: 44, h: 34, targetX: W / 2 };
+let state = 'menu', score = 0, currentLevel = 1;
+const ship = { x: W / 2, y: H - 60, targetX: W / 2 };
 let bullets = [], asteroids = [], coins = [], bossBullets = [], particles = [], stars = [];
-let boss = null;
-let lastBulletTime = 0, lastAsteroidTime = 0, lastCoinTime = 0, lastBossBulletTime = 0, animFrameId = null, prevTimestamp = 0;
+let boss = null, lastBulletTime = 0, lastAsteroidTime = 0, lastCoinTime = 0, lastBossBulletTime = 0, animFrameId = null, prevTimestamp = 0;
 
-function initStars() { stars = []; for (let i = 0; i < 120; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.4 + 0.3, speed: Math.random() * 0.6 + 0.2, alpha: Math.random() * 0.7 + 0.3 }); }
-function updateStars(dt) { for (const s of stars) { s.y += s.speed * dt * 0.06; if (s.y > H) { s.y = 0; s.x = Math.random() * W; } } }
-function drawStars() { for (const s of stars) { ctx.globalAlpha = s.alpha; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); } ctx.globalAlpha = 1; }
-function spawnParticles(x, y, color, count, speed) { for (let i = 0; i < count; i++) { const a = Math.random() * Math.PI * 2, s = Math.random() * speed + 1; particles.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 1, decay: Math.random()*0.04+0.02, r: Math.random()*3+1, color }); } }
-function updateParticles(dt) { for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx*dt*0.05; p.y += p.vy*dt*0.05; p.life -= p.decay*dt*0.05; if (p.life <= 0) particles.splice(i, 1); } }
+function initStars() { stars = []; for (let i = 0; i < 100; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.5 + 0.3, speed: Math.random() * 0.5 + 0.2 }); }
+function updateStars(dt) { for (let i = stars.length - 1; i >= 0; i--) { stars[i].y += stars[i].speed * dt * 0.06; if (stars[i].y > H) { stars[i].y = 0; stars[i].x = Math.random() * W; } } }
+function drawStars() { ctx.fillStyle = '#fff'; for (const s of stars) { ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); } ctx.globalAlpha = 1; }
+function spawnParticles(x, y, color, count) { for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 1, decay: Math.random()*0.05+0.02, r: Math.random()*3+1, color }); }
+function updateParticles(dt) { for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.x += p.vx*dt*0.05; p.y += p.vy*dt*0.05; p.life -= p.decay*dt*0.05; if (p.life <= 0) particles.splice(i, 1); } }
 function drawParticles() { for (const p of particles) { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); } ctx.globalAlpha = 1; }
+function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
 
-function drawShip(x, y) { ctx.save(); ctx.translate(x, y); const c = itemColors.ship[myItems.ship] || '#0af3'; const g = ctx.createRadialGradient(0, 16, 2, 0, 16, 18); g.addColorStop(0, `${c}7`); g.addColorStop(1, `${c}0`); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 20, 18, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = `${c}3`; ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0; ctx.restore(); }
-function drawBullet(b) { ctx.save(); ctx.shadowColor = itemColors.weapon[myItems.weapon] || '#0f0'; ctx.shadowBlur = 10; ctx.fillStyle = itemColors.weapon[myItems.weapon] || '#0f0'; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); }
-function drawAsteroid(a) { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot); ctx.shadowColor = '#888'; ctx.shadowBlur = 8; ctx.fillStyle = '#555'; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5; ctx.beginPath(); const p = a.shape; ctx.moveTo(p[0].x, p[0].y); for (let i = 1; i < p.length; i++) ctx.lineTo(p[i].x, p[i].y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
-function drawCoin(c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); const g = ctx.createRadialGradient(-3, -3, 1, 0, 0, c.r); g.addColorStop(0, '#fff700'); g.addColorStop(1, '#c86400'); ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, c.r, c.r * 0.7, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+function drawShip(x, y) { 
+  ctx.save(); ctx.translate(x, y); 
+  const c = itemColors.ship[myItems.ship] || '#0af'; 
+  ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = c+'3'; 
+  ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); 
+  ctx.shadowBlur = 0; ctx.restore(); 
+}
+
+function drawBullet(b) { ctx.save(); ctx.shadowColor = itemColors.weapon[myItems.weapon]||'#0f0'; ctx.shadowBlur = 10; ctx.fillStyle = itemColors.weapon[myItems.weapon]||'#0f0'; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); }
+
+function drawAsteroid(a) { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot); ctx.fillStyle = '#555'; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a.shape[0].x, a.shape[0].y); for (let i = 1; i < a.shape.length; i++) ctx.lineTo(a.shape[i].x, a.shape[i].y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
+function drawCoin(c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffa500'; ctx.beginPath(); ctx.arc(0, 0, c.r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
 function drawBoss(b) {
   ctx.save(); ctx.translate(b.x, b.y);
-  const hueShift = Math.min(currentLevel * 2, 200); const bc = `hsl(${hueShift}, 100%, 40%)`; const bg = `hsl(${hueShift}, 100%, 50%)`;
-  ctx.shadowColor = bg; ctx.shadowBlur = 24; ctx.fillStyle = '#200'; ctx.strokeStyle = bc; ctx.lineWidth = 2.5;
-  ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h);
-  ctx.fillStyle = '#400'; ctx.strokeStyle = bg; 
-  ctx.beginPath(); ctx.moveTo(-b.w / 2, -10); ctx.lineTo(-b.w / 2 - 28, 10); ctx.lineTo(-b.w / 2 - 14, 20); ctx.lineTo(-b.w / 2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(b.w / 2, -10); ctx.lineTo(b.w / 2 + 28, 10); ctx.lineTo(b.w / 2 + 14, 20); ctx.lineTo(b.w / 2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = `${bg}6`; ctx.beginPath(); ctx.ellipse(0, -6, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
-  const barW = b.w + 40, barX = -barW / 2, barY = -b.h / 2 - 18; ctx.shadowBlur=0; ctx.fillStyle = '#300'; ctx.fillRect(barX, barY, barW, 10);
-  ctx.fillStyle = bc; ctx.shadowColor = bg; ctx.shadowBlur = 8; ctx.fillRect(barX, barY, barW * (b.hp/b.maxHp), 10);
-  ctx.shadowBlur=0; ctx.fillStyle = '#fff'; ctx.font = 'bold 10px "Share Tech Mono", monospace'; ctx.textAlign = 'center'; ctx.fillText(`LVL ${b.level}  ${b.hp}/${b.maxHp}`, 0, barY + 8);
+  let hue = Math.min(currentLevel * 2, 200); ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 24; ctx.fillStyle = '#300'; ctx.strokeStyle = `hsl(${hue}, 100%, 40%)`; ctx.lineWidth = 2.5;
+  ctx.fillRect(-b.w/2, -b.h/2, b.w, b.h); ctx.strokeRect(-b.w/2, -b.h/2, b.w, b.h);
+  ctx.shadowBlur=0; ctx.fillStyle = '#300'; ctx.fillRect(-b.w/2-20, -b.h/2-18, b.w+40, 10);
+  ctx.fillStyle = `hsl(${hue}, 100%, 40%)`; ctx.fillRect(-b.w/2-20, -b.h/2-18, (b.w+40)*(b.hp/b.maxHp), 10);
+  ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.textAlign = 'center'; ctx.fillText(`LVL ${b.level} ${b.hp}/${b.maxHp}`, 0, -b.h/2-8);
   ctx.restore();
 }
 function drawBossBullet(b) { ctx.save(); ctx.shadowColor = '#f00'; ctx.shadowBlur = 10; ctx.fillStyle = '#f22'; ctx.beginPath(); ctx.ellipse(b.x, b.y, 5, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
-function makeAsteroidShape(r) { const pts = []; for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; pts.push({ x: Math.cos(a) * r * (0.7 + Math.random() * 0.5), y: Math.sin(a) * r * (0.7 + Math.random() * 0.5) }); } return pts; }
-function spawnAsteroid() { const r = 16 + Math.random() * 20 + (currentLevel * 0.5); asteroids.push({ x: r + Math.random() * (W - r * 2), y: -r, r, speed: 1.4 + Math.random() * 1.6 + (currentLevel * 0.05), rot: 0, rotSpeed: (Math.random() - 0.5) * 0.04, shape: makeAsteroidShape(r), hp: Math.ceil(r / 10) }); }
-function spawnCoin() { coins.push({ x: 12 + Math.random() * (W - 24), y: -12, r: 12, speed: 1.8 + Math.random() * 1.2, rot: 0, rotSpeed: 0.04 }); }
-function spawnBoss() { let lvl = Math.min(currentLevel, 200); let hp = 200 + (lvl * 150); let fRate = Math.max(150, 900 - (lvl * 3.75)); let spd = 1.5 + (lvl * 0.05); boss = { x: W / 2, y: 80, w: 90, h: 50, hp: hp, maxHp: hp, speed: spd, dir: 1, alive: true, fireRate: fRate, level: lvl }; }
-function circleRect(cx, cy, cr, rx, ry, rw, rh) { const nx = Math.max(rx - rw / 2, Math.min(cx, rx + rw / 2)); const ny = Math.max(ry - rh / 2, Math.min(cy, ry + rh / 2)); return Math.hypot(cx - nx, cy - ny) < cr; }
-function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
+function makeShape(r) { let p=[]; for(let i=0;i<9;i++){let a=(i/9)*Math.PI*2; p.push({x:Math.cos(a)*r*(0.7+Math.random()*0.5), y:Math.sin(a)*r*(0.7+Math.random()*0.5)});} return p; }
+function spawnAsteroid() { let r=16+Math.random()*20; asteroids.push({x:r+Math.random()*(W-r*2), y:-r, r, speed:1.4+Math.random()*1.6, rot:0, rotSpeed:(Math.random()-0.5)*0.04, shape:makeShape(r), hp:2}); }
+function spawnCoin() { coins.push({x:12+Math.random()*(W-24), y:-12, r:12, speed:2, rot:0, rotSpeed:0.04}); }
+function spawnBoss() { let l=Math.min(currentLevel,200); boss={x:W/2,y:80,w:90,h:50,hp:200+(l*150),maxHp:200+(l*150),speed:1.5+(l*0.05),dir:1,fireRate:Math.max(150,900-(l*3.75)),level:l}; }
+function circleRect(cx,cy,cr,rx,ry,rw,rh){let nx=Math.max(rx-rw/2,Math.min(cx,rx+rw/2));let ny=Math.max(ry-rh/2,Math.min(cy,ry+rh/2));return Math.hypot(cx-nx,cy-ny)<cr;}
 
 function drawHUD() {
-  const drc = ((score + totalSavedScore) / 100000).toFixed(3);
-  ctx.save(); ctx.font = 'bold 14px "Orbitron", monospace'; ctx.textBaseline = 'top'; 
+  let drc = ((score + totalSavedScore) / 100000).toFixed(3);
+  ctx.save(); ctx.font = 'bold 14px Orbitron'; ctx.textBaseline = 'top'; 
   ctx.shadowColor = '#0ff'; ctx.shadowBlur = 8; ctx.fillStyle = '#0ff'; ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${score.toLocaleString()}`, 14, 12);
   ctx.shadowColor = '#f44'; ctx.fillStyle = '#f44'; ctx.textAlign = 'center'; ctx.fillText(`LVL: ${currentLevel}`, W / 2, 12);
-  ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.font = 'bold 12px "Orbitron", monospace'; ctx.textAlign = 'right'; ctx.fillText(`DRC: ${drc}`, W - 14, 12);
+  ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'right'; ctx.fillText(`DRC: ${drc}`, W - 14, 12);
   ctx.restore();
 }
 
 function gameLoop(timestamp) {
   if (state !== 'playing') return;
-  const dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp;
+  let dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp;
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   updateStars(dt); drawStars();
-  ship.x += (ship.targetX - ship.x) * Math.min(shipConfig.speed * 0.012 * dt, 1); ship.x = Math.max(ship.w / 2 + 4, Math.min(W - ship.w / 2 - 4, ship.x);
-  if (timestamp - lastBulletTime > shipConfig.fireRate) { bullets.push({ x: ship.x - 6, y: ship.y - 20, speed: 11 }, { x: ship.x + 6, y: ship.y - 20, speed: 11 }); lastBulletTime = timestamp; }
-  const aI = Math.max(300, 1800 - (currentLevel * 8)); if (timestamp - lastAsteroidTime > aI) { spawnAsteroid(); if (Math.random() < 0.3 + (currentLevel*0.01)) spawnAsteroid(); lastAsteroidTime = timestamp; }
-  const cI = Math.max(600, 2400 - (currentLevel * 5)); if (timestamp - lastCoinTime > cI) { spawnCoin(); lastCoinTime = timestamp; }
-  if (score >= currentLevel * 50000 && !boss) { spawnBoss(); }
-  for (let i = bullets.length - 1; i >= 0; i--) { bullets[i].y -= bullets[i].speed * dt * 0.05; if (bullets[i].y < -20) bullets.splice(i, 1); }
-  for (let i = bossBullets.length - 1; i >= 0; i--) { const b = bossBullets[i]; b.x += b.vx * dt * 0.05; b.y += b.vy * dt * 0.05; if (b.y > H + 20) bossBullets.splice(i, 1); }
-  for (let i = asteroids.length - 1; i >= 0; i--) { const a = asteroids[i]; a.y += a.speed * dt * 0.05; a.rot += a.rotSpeed * dt * 0.05; if (a.y > H + a.r * 2) { asteroids.splice(i, 1); continue; } if (dist(a.x, a.y, ship.x, ship.y) < a.r + 18) { spawnParticles(ship.x, ship.y, '#0ff', 30, 6); triggerGameOver(); return; } }
-  const mR = 60 + shipConfig.coinMagnet;
-  for (let i = coins.length - 1; i >= 0; i--) { const c = coins[i]; const d = dist(c.x, c.y, ship.x, ship.y); if (d < mR) { const ang = Math.atan2(ship.y - c.y, ship.x - c.x); c.x += Math.cos(ang) * 4 * dt * 0.05; c.y += Math.sin(ang) * 4 * dt * 0.05; } else { c.y += c.speed * dt * 0.05; } c.rot += c.rotSpeed * dt * 0.05; if (c.y > H + 20) { coins.splice(i, 1); continue; } if (dist(c.x, c.y, ship.x, ship.y) < c.r + 20) { score += 10; spawnParticles(c.x, c.y, '#ffd700', 12, 4); coins.splice(i, 1); } }
-  for (let bi = bullets.length - 1; bi >= 0; bi--) { const b = bullets[bi]; let hit = false; for (let ai = asteroids.length - 1; ai >= 0; ai--) { const a = asteroids[ai]; if (dist(b.x, b.y, a.x, a.y) < a.r + 4) { a.hp -= shipConfig.damage; spawnParticles(b.x, b.y, '#888', 5, 3); if (a.hp <= 0) { spawnParticles(a.x, a.y, '#aaa', 18, 5); asteroids.splice(ai, 1); score += 5; } bullets.splice(bi, 1); hit = true; break; } } if (hit) continue; if (boss && boss.alive && circleRect(b.x, b.y, 4, boss.x, boss.y, boss.w, boss.h)) { boss.hp -= shipConfig.damage; spawnParticles(b.x, b.y, '#f88', 6, 4); bullets.splice(bi, 1); if (boss.hp <= 0) { spawnParticles(boss.x, boss.y, '#f00', 50, 8); score += 10000 + (currentLevel * 1000); currentLevel++; boss = null; bossBullets = []; } } }
-  if (boss && boss.alive) { boss.x += boss.speed * boss.dir * dt * 0.05; if (boss.x > W - boss.w / 2 - 20 || boss.x < boss.w / 2 + 20) boss.dir *= -1; if (timestamp - lastBossBulletTime > boss.fireRate) { if(currentLevel > 50 && currentLevel < 100) { for (let s = -3; s <= 3; s += 3) { const a = Math.PI / 2 + (s * 0.2); bossBullets.push({ x: boss.x + s * 10, y: boss.y + boss.h / 2, vx: Math.cos(a) * 4, vy: Math.sin(a) * 4 }); } } else if(currentLevel >= 100) { for (let s = -6; s <= 6; s += 3) { const a = Math.PI / 2 + (s * 0.15); bossBullets.push({ x: boss.x + s * 10, y: boss.y + boss.h / 2, vx: Math.cos(a) * 5, vy: Math.sin(a) * 5 }); } } else { for (let s = -3; s <= 3; s += 6) { const a = Math.PI / 2 + (s * 0.18); bossBullets.push({ x: boss.x + s * 10, y: boss.y + boss.h / 2, vx: Math.cos(a) * 4, vy: Math.sin(a) * 4 }); } } lastBossBulletTime = timestamp; } drawBoss(boss); }
-  for (let i = bossBullets.length - 1; i >= 0; i--) { if (dist(bossBullets[i].x, bossBullets[i].y, ship.x, ship.y) < 16) { spawnParticles(ship.x, ship.y, '#f00', 30, 6); triggerGameOver(); return; } }
-  for (const a of asteroids) drawAsteroid(a); for (const c of coins) drawCoin(c); for (const b of bullets) drawBullet(b); for (const bb of bossBullets) drawBossBullet(bb);
-  drawParticles(); updateParticles(dt); drawShip(ship.x, ship.y); drawHUD();
+  
+  ship.x += (ship.targetX - ship.x) * Math.min(shipConfig.speed * 0.012 * dt, 1); ship.x = Math.max(24, Math.min(W - 24, ship.x));
+  if (timestamp - lastBulletTime > shipConfig.fireRate) { bullets.push({x:ship.x-6,y:ship.y-20,speed:11},{x:ship.x+6,y:ship.y-20,speed:11}); lastBulletTime = timestamp; }
+  if (timestamp - lastAsteroidTime > Math.max(600, 1800 - (currentLevel*8))) { spawnAsteroid(); lastAsteroidTime = timestamp; }
+  if (timestamp - lastCoinTime > Math.max(900, 2400 - (currentLevel*5))) { spawnCoin(); lastCoinTime = timestamp; }
+  if (score >= currentLevel * 50000 && !boss) spawnBoss();
+
+  for(let i=bullets.length-1;i>=0;i--){bullets[i].y-=bullets[i].speed*dt*0.05;if(bullets[i].y<-20)bullets.splice(i,1);}
+  for(let i=bossBullets.length-1;i>=0;i--){let b=bossBullets[i];b.x+=b.vx*dt*0.05;b.y+=b.vy*dt*0.05;if(b.y>H+20)bossBullets.splice(i,1);}
+
+  for(let i=asteroids.length-1;i>=0;i--){let a=asteroids[i];a.y+=a.speed*dt*0.05;a.rot+=a.rotSpeed*dt*0.05;if(a.y>H+40){asteroids.splice(i,1);continue;}if(dist(a.x,a.y,ship.x,ship.y)<a.r+18){spawnParticles(ship.x,ship.y,'#0ff',30);triggerGameOver();return;}}
+  
+  for(let i=coins.length-1;i>=0;i--){let c=coins[i];c.y+=c.speed*dt*0.05;c.rot+=c.rotSpeed*dt*0.05;if(c.y>H+20){coins.splice(i,1);continue;}if(dist(c.x,c.y,ship.x,ship.y)<c.r+20){score+=10;spawnParticles(c.x,c.y,'#ffd700',12);coins.splice(i,1);}}
+
+  for(let bi=bullets.length-1;bi>=0;bi--){let b=bullets[bi];let hit=false;
+    for(let ai=asteroids.length-1;ai>=0;ai--){let a=asteroids[ai];if(dist(b.x,b.y,a.x,a.y)<a.r+4){a.hp--;spawnParticles(b.x,b.y,'#888',5);if(a.hp<=0){spawnParticles(a.x,a.y,'#aaa',18);asteroids.splice(ai,1);score+=5;}bullets.splice(bi,1);hit=true;break;}}
+    if(!hit&&boss&&circleRect(b.x,b.y,4,boss.x,boss.y,boss.w,boss.h)){boss.hp--;spawnParticles(b.x,b.y,'#f88',6);bullets.splice(bi,1);if(boss.hp<=0){spawnParticles(boss.x,boss.y,'#f00',50);score+=10000+(currentLevel*1000);currentLevel++;boss=null;bossBullets=[];}}}
+
+  if(boss){boss.x+=boss.speed*boss.dir*dt*0.05;if(boss.x>W-boss.w/2-20||boss.x<boss.w/2+20)boss.dir*=-1;
+    if(timestamp-lastBossBulletTime>boss.fireRate){for(let s=-3;s<=3;s+=3){let a=Math.PI/2+(s*0.18);bossBullets.push({x:boss.x+s*10,y:boss.y+boss.h/2,vx:Math.cos(a)*4,vy:Math.sin(a)*4});}lastBossBulletTime=timestamp;}
+    drawBoss(boss);}
+
+  for(let i=bossBullets.length-1;i>=0;i--){if(dist(bossBullets[i].x,bossBullets[i].y,ship.x,ship.y)<16){spawnParticles(ship.x,ship.y,'#f00',30);triggerGameOver();return;}}
+
+  for(const a of asteroids)drawAsteroid(a);for(const c of coins)drawCoin(c);for(const b of bullets)drawBullet(b);for(const bb of bossBullets)drawBossBullet(bb);
+  drawParticles();updateParticles(dt);drawShip(ship.x,ship.y);drawHUD();
   animFrameId = requestAnimationFrame(gameLoop);
 }
 
 function startGame() {
-  score = 0; currentLevel = 1; bullets = []; asteroids = []; coins = []; bossBullets = []; particles = []; boss = null;
-  ship.x = W / 2; ship.targetX = W / 2; lastBulletTime = 0; lastAsteroidTime = 0; lastCoinTime = 0; lastBossBulletTime = 0;
-  initStars(); 
-  document.querySelectorAll('.ui-layer > .screen').forEach(s => s.classList.add('hidden'));
+  score = 0; currentLevel = 1; bullets=[];asteroids=[];coins=[];bossBullets=[];particles=[];boss=null;
+  ship.x = W/2; ship.targetX = W/2; lastBulletTime=0;lastAsteroidTime=0;lastCoinTime=0;lastBossBulletTime=0;
+  initStars(); showScreen('gameOverScreen'); // Hide all UI by forcing game over screen hidden
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
   state = 'playing'; prevTimestamp = performance.now(); animFrameId = requestAnimationFrame(gameLoop);
 }
 
@@ -326,17 +305,15 @@ function triggerGameOver() {
   document.getElementById('goScore').textContent = score.toLocaleString();
   document.getElementById('goDRC').textContent = savedDRC.toFixed(3);
   showScreen('gameOverScreen');
-  ctx.fillStyle = 'rgba(255,0,0,0.12)'; ctx.fillRect(0, 0, W, H);
-  if (playerWallet && db) { 
-    totalSavedScore = newTotal; 
-    db.from('players').upsert({ wallet_address: playerWallet, total_score: newTotal, drc_balance: savedDRC }, { onConflict: 'wallet_address' }); 
-  }
+  ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0, 0, W, H);
+  if(playerWallet && db) { totalSavedScore = newTotal; db.from('players').upsert({wallet_address:playerWallet,total_score:newTotal,drc_balance:savedDRC},{onConflict:'wallet_address'}); }
 }
 
+// INPUT HANDLERS
 function getCanvasX(clientX) { return (clientX - canvas.getBoundingClientRect().left) * (W / canvas.getBoundingClientRect().width); }
-canvas.addEventListener('mousemove', e => { if (state === 'playing') ship.targetX = getCanvasX(e.clientX); });
-canvas.addEventListener('touchmove', e => { e.preventDefault(); if (state === 'playing') ship.targetX = getCanvasX(e.touches[0].clientX); }, { passive: false });
-canvas.addEventListener('touchstart', e => { e.preventDefault(); if (state === 'playing') ship.targetX = getCanvasX(e.touches[0].clientX); }, { passive: false });
+canvas.addEventListener('mousemove', e => { if(state==='playing') ship.targetX = getCanvasX(e.clientX); });
+canvas.addEventListener('touchmove', e => { e.preventDefault(); if(state==='playing') ship.targetX = getCanvasX(e.touches[0].clientX); }, {passive:false});
+canvas.addEventListener('touchstart', e => { e.preventDefault(); if(state==='playing') ship.targetX = getCanvasX(e.touches[0].clientX); }, {passive:false});
 </script>
 </body>
 </html>

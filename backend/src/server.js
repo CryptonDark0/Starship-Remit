@@ -5,33 +5,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// TEST ROUTE
-app.get("/", (req, res) => {
-  res.send("🚀 Starship Remit Backend Running");
-});
-
-// SCORE API
 app.post("/api/game/score", (req, res) => {
   const { wallet, score } = req.body;
 
-  if (!wallet || !score) {
-    return res.status(400).json({ error: "Missing data" });
-  }
+  console.log("Score received:", wallet, score);
 
-  // 🎯 Convert score → DRC
+  // fake DRC calculation
   const drc = score / 100000;
 
-  console.log("Player:", wallet);
-  console.log("Score:", score);
-  console.log("DRC Earned:", drc);
-
-  // (TEMP: no database yet)
-  return res.json({
+  res.json({
     success: true,
-    drcEarned: drc
+    wallet,
+    score,
+    drc
   });
 });
 
 app.listen(3000, () => {
-  console.log("🚀 Backend running on port 3000");
+  console.log("🚀 Backend running on http://localhost:3000");
 });

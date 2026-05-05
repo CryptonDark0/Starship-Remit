@@ -23,24 +23,28 @@
   .sub-text { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #0af8; letter-spacing: 0.2em; pointer-events: none; }
   
   .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 300px; margin-top: 10px; }
-  .btn { font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.8rem; color: #000; background: linear-gradient(135deg, #0ff 0%, #0af 100%); border: none; padding: 12px 10px; cursor: pointer; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%); box-shadow: 0 0 10px #0ff4; text-transform: uppercase; transition: transform 0.1s; }
+  .btn { font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.8rem; color: #000; background: linear-gradient(135deg, #0ff 0%, #0af 100%); border: none; padding: 14px 10px; cursor: pointer; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%); box-shadow: 0 0 10px #0ff4; text-transform: uppercase; transition: transform 0.1s; width: 100%; }
   .btn:active { transform: scale(0.95); }
   .btn-gold { background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); }
   .btn-red { background: linear-gradient(135deg, #f44 0%, #a00 100%); color: #fff; }
-  .btn-sm { padding: 8px 6px; font-size: 0.65rem; }
+  .btn-sm { padding: 8px 6px; font-size: 0.65rem; width: auto; }
   .btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; transform: none; }
 
   .store-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #0ff3; padding-bottom: 5px;}
   .item-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 15px; }
   .item-card { background: #111; border: 1px solid #333; padding: 8px; text-align: center; border-radius: 4px; }
   .item-card.owned { border-color: #0f8; }
-  .item-icon { font-size: 1.8rem; margin-bottom: 4px; pointer-events: none; }
-  .item-name { font-size: 0.6rem; color: #aaa; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
-  .item-price { font-size: 0.6rem; color: #ffd700; margin-bottom: 6px; pointer-events: none; }
+  .item-icon { font-size: 1.5rem; margin-bottom: 4px; pointer-events: none; }
+  .item-name { font-size: 0.55rem; color: #aaa; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
+  .item-price { font-size: 0.55rem; color: #ffd700; margin-bottom: 6px; pointer-events: none; }
   .wallet-status { font-size: 0.7rem; color: #f88; margin-top: 5px; font-family: 'Share Tech Mono', monospace; pointer-events: none; }
   
   .stat-row { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #0f8; text-align: center; pointer-events: none; }
   .go-title { font-weight: 900; font-size: 1.8rem; color: #f44; text-shadow: 0 0 20px #f44; pointer-events: none; }
+  
+  .claim-box { border: 1px solid #0ff3; background: #050510; padding: 20px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; }
+  .drc-amount { font-size: 2.5rem; color: #ffd700; text-shadow: 0 0 20px #ffd700; margin: 15px 0; font-weight: 900; }
+  .opensea-banner { background: linear-gradient(135deg, #2081e2 0%, #1565c0 100%); padding: 12px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; cursor: pointer; text-decoration: none; color: white; font-weight: bold; font-family: 'Orbitron'; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 </style>
 </head>
 <body>
@@ -50,20 +54,20 @@
   
   <div class="ui-layer" id="uiLayer">
     
-    <!-- MAIN MENU (Always shows first) -->
+    <!-- MAIN MENU -->
     <div class="screen" id="mainMenu">
       <div class="game-title">STARSHIP<br>REMIT</div>
       <div class="sub-text">// COMMAND CENTER //</div>
       
-      <div class="wallet-status" id="walletStatus">⚠ Not Connected</div>
+      <div class="wallet-status" id="walletStatus">⚠ Connect Wallet to Play</div>
       
       <button class="btn btn-red" id="connectBtn" onclick="connectWallet()">🔓 CONNECT WALLET</button>
       
       <div class="menu-grid">
-        <button class="btn" id="playBtn" onclick="startGame()">▶ PLAY</button>
-        <button class="btn btn-gold" id="storeBtn" onclick="showScreen('storeScreen')">🛒 STORE</button>
-        <button class="btn" id="inventoryBtn" onclick="showScreen('inventoryScreen')">💼 NFTS</button>
-        <button class="btn" id="withdrawMenuBtn" onclick="handleWithdraw()">💰 CLAIM</button>
+        <button class="btn hidden" id="playBtn" onclick="startGame()">▶ PLAY GAME</button>
+        <button class="btn btn-gold hidden" id="storeBtn" onclick="showScreen('storeScreen')">🛒 STORE</button>
+        <button class="btn hidden" id="inventoryBtn" onclick="showScreen('inventoryScreen')">💼 NFTS</button>
+        <button class="btn hidden" id="withdrawMenuBtn" onclick="showClaimScreen()">💰 CLAIM DRC</button>
       </div>
     </div>
 
@@ -73,21 +77,29 @@
         <span style="color:#0ff; font-size:1rem;">🛒 MARKETPLACE</span>
         <button class="btn btn-sm" onclick="showScreen('mainMenu')">← BACK</button>
       </div>
+      
       <div class="sub-text">STARSHIPS</div>
       <div class="item-grid">
         <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">Standard</div><div class="item-price" style="color:#0f8;">FREE</div><button class="btn btn-sm" disabled>EQUIPPED</button></div>
         <div class="item-card"><div class="item-icon">✈️</div><div class="item-name">Neon Viper</div><div class="item-price">500 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'neon', 500)">BUY</button></div>
         <div class="item-card"><div class="item-icon">🛸</div><div class="item-name">Void Cruiser</div><div class="item-price">0.1 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'void', 0.1, 'BNB')">BUY</button></div>
+        <div class="item-card"><div class="item-icon">🌀</div><div class="item-name">Galaxy Destroyer</div><div class="item-price">1500 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'galaxy', 1500)">BUY</button></div>
+        <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Phoenix</div><div class="item-price">0.5 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'phoenix', 0.5, 'BNB')">BUY</button></div>
+        <div class="item-card"><div class="item-icon">💎</div><div class="item-name">Diamond Frame</div><div class="item-price">$5.00 USD</div><button class="btn btn-sm btn-gold" onclick="buyItem('ship', 'diamond', 5, 'USD')">BUY</button></div>
       </div>
+
       <div class="sub-text">WEAPONS</div>
       <div class="item-grid">
         <div class="item-card owned"><div class="item-icon">💚</div><div class="item-name">Laser</div><div class="item-price" style="color:#0f8;">FREE</div><button class="btn btn-sm" disabled>EQUIPPED</button></div>
         <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Plasma</div><div class="item-price">1000 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'plasma', 1000)">BUY</button></div>
-        <div class="item-card"><div class="item-icon">⚡</div><div class="item-name">Railgun</div><div class="item-price">$2.00 USD</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'rail', 2, 'USD')">BUY</button></div>
+        <div class="item-card"><div class="item-icon">⚡</div><div class="item-name">Railgun</div><div class="item-price">0.2 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'rail', 0.2, 'BNB')">BUY</button></div>
+        <div class="item-card"><div class="item-icon">❄️</div><div class="item-name">Cryo Beam</div><div class="item-price">2000 DRC</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'cryo', 2000)">BUY</button></div>
+        <div class="item-card"><div class="item-icon">☠️</div><div class="item-name">Inferno</div><div class="item-price">1 BNB</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'inferno', 1, 'BNB')">BUY</button></div>
+        <div class="item-card"><div class="item-icon">🌈</div><div class="item-name">Prismatic</div><div class="item-price">$10 USD</div><button class="btn btn-sm btn-gold" onclick="buyItem('weapon', 'prismatic', 10, 'USD')">BUY</button></div>
       </div>
     </div>
 
-    <!-- INVENTORY -->
+    <!-- INVENTORY & OPENSEA -->
     <div class="screen hidden" id="inventoryScreen">
       <div class="store-header">
         <span style="color:#0ff; font-size:1rem;">💼 MY NFTS</span>
@@ -96,6 +108,30 @@
       <div id="inventoryList" class="item-grid" style="margin-top:20px;">
         <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">Standard Ship</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
         <div class="item-card owned"><div class="item-icon">💚</div><div class="item-name">Laser</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
+      </div>
+      
+      <!-- OPENSEA LINK -->
+      <div class="sub-text" style="margin-top:20px; color:#fff;">BUY & TRADE ON OPENSEA</div>
+      <a href="https://opensea.io/StarshipRemit" target="_blank" class="opensea-banner">
+        <span>🌊</span> View Starship Remit Collection
+      </a>
+    </div>
+
+    <!-- CLAIM DRC DASHBOARD -->
+    <div class="screen hidden" id="claimScreen">
+      <div class="store-header">
+        <span style="color:#ffd700; font-size:1rem;">💰 DRC EARNINGS</span>
+        <button class="btn btn-sm" onclick="showScreen('mainMenu')">← BACK</button>
+      </div>
+      
+      <div class="claim-box">
+        <div class="sub-text">AVAILABLE BALANCE</div>
+        <div class="drc-amount" id="claimDrcAmount">0.000 DRC</div>
+        <div class="sub-text" style="font-size:0.6rem; color:#888;">Connected Wallet:</div>
+        <div class="wallet-status" id="claimWalletAddress" style="color:#0ff; word-break:break-all; font-size:0.65rem; margin-top:5px;">0x000...000</div>
+        
+        <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;" onclick="handleWithdraw()">WITHDRAW TO BSC WALLET</button>
+        <div class="sub-text hidden" id="withdrawWarn" style="color:#f88; font-size:0.6rem; margin-top:10px;">⚠️ You need 10,000 DRC to withdraw.</div>
       </div>
     </div>
 
@@ -113,74 +149,89 @@
 </div>
 
 <script>
-const { createClient } = supabase;
-const db = createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC');
-let playerWallet = null; let totalSavedScore = 0;
+let db;
+try { db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC'); } catch(e) {}
 
+let playerWallet = null; let totalSavedScore = 0; let savedDRC = 0;
 let myItems = { ship: 'standard', weapon: 'laser' }; 
-const itemColors = { ship: { standard: '#0af3', neon: '#f0f', void: '#808' }, weapon: { laser: '#0f0', plasma: '#f80', rail: '#08f' } };
+const itemColors = { 
+  ship: { standard: '#0af3', neon: '#f0f', void: '#808', galaxy: '#48f', phoenix: '#f80', diamond: '#0ff' }, 
+  weapon: { laser: '#0f0', plasma: '#f80', rail: '#08f', cryo: '#8ff', inferno: '#f00', prismatic: '#f0f' } 
+};
 
 function showScreen(id) {
   document.querySelectorAll('.ui-layer > .screen').forEach(s => s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
-// Auto-login if wallet extension is already open
-async function initApp() {
+window.onload = function() {
   if (typeof window.ethereum !== 'undefined') {
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-      if (accounts.length > 0) {
-        await setupWalletUI(accounts[0]);
-      }
-    } catch (err) {}
+    window.ethereum.request({ method: 'eth_accounts' }).then(accs => { if (accs.length > 0) setupWalletUI(accs[0]); }).catch(()=>{});
   }
-}
+};
 
 async function connectWallet() {
   if (typeof window.ethereum !== 'undefined') {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts.length > 0) {
-        await setupWalletUI(accounts[0]);
-      }
-    } catch (err) {
-      alert("Connection rejected by user.");
-    }
+      if (accounts.length > 0) setupWalletUI(accounts[0]);
+    } catch (err) { alert("Connection rejected."); }
   } else {
-    alert("⚠️ NO WALLET DETECTED ⚠️\n\n1. On PC: Install the MetaMask Chrome Extension.\n2. On Mobile: Open this exact URL inside the Trust Wallet or MetaMask App DApp Browser.");
+    alert("NO WALLET DETECTED.\n\n1. PC: Install MetaMask.\n2. Mobile: Open this URL inside Trust Wallet DApp Browser.");
   }
 }
 
-async function setupWalletUI(walletAddress) {
-  playerWallet = walletAddress;
-  document.getElementById('walletStatus').innerText = '✅ ' + playerWallet.substring(0, 6) + '...' + playerWallet.substring(38);
+async function setupWalletUI(address) {
+  playerWallet = address;
+  const shortAddr = playerWallet.substring(0, 6) + '...' + playerWallet.substring(38);
+  document.getElementById('walletStatus').innerText = '✅ Connected: ' + shortAddr;
   document.getElementById('walletStatus').style.color = '#0f8';
-  document.getElementById('connectBtn').classList.add('hidden');
   
-  const { data } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
-  if (data) { totalSavedScore = data.total_score; } else { await db.from('players').insert({ wallet_address: playerWallet, total_score: 0 }); }
+  // Hide connect, Show game buttons
+  document.getElementById('connectBtn').classList.add('hidden');
+  ['playBtn', 'storeBtn', 'inventoryBtn', 'withdrawMenuBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+  
+  if(db) {
+    const { data } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
+    if (data) { totalSavedScore = data.total_score; savedDRC = data.drc_balance || 0; } 
+    else { await db.from('players').insert({ wallet_address: playerWallet, total_score: 0, drc_balance: 0 }); }
+  }
+}
+
+async function showClaimScreen() {
+  if(!playerWallet) return alert("Connect wallet first!");
+  showScreen('claimScreen');
+  document.getElementById('claimWalletAddress').innerText = playerWallet;
+  document.getElementById('claimDrcAmount').innerText = savedDRC.toFixed(3) + " DRC";
+  
+  if (savedDRC >= 10000) {
+    document.getElementById('withdrawNowBtn').classList.remove('hidden');
+    document.getElementById('withdrawWarn').classList.add('hidden');
+  } else {
+    document.getElementById('withdrawNowBtn').classList.add('hidden');
+    document.getElementById('withdrawWarn').classList.remove('hidden');
+    document.getElementById('withdrawWarn').innerText = `⚠️ You need 10,000 DRC to withdraw. You currently have ${savedDRC.toFixed(3)} DRC. Keep playing!`;
+  }
+}
+
+function handleWithdraw() {
+  if(savedDRC >= 10000) {
+    alert(`SUCCESS! 10,000 DRC will be sent to your BSC wallet within 24 hours.\n(Note: Real automatic payouts require your backend Node.js script in Phase 4)`);
+  }
 }
 
 function buyItem(type, id, amount, currency = 'DRC') {
+  if(!playerWallet) return alert("Connect wallet first!");
   let payStr = currency === 'DRC' ? `${amount} DRC` : currency === 'BNB' ? `${amount} BNB` : `$${amount} USD`;
-  alert(`Mock Transaction: ${payStr} for ${id.toUpperCase()} ${type}.\n(Requires Smart Contract in Phase 5)`);
-  myItems[type] = id;
-  updateInventoryUI();
-  showScreen('inventoryScreen');
+  alert(`Mock Transaction: ${payStr} for ${id.toUpperCase()} ${type}.\n(Requires Smart Contract deployment)`);
+  myItems[type] = id; updateInventoryUI(); showScreen('inventoryScreen');
 }
 
 function updateInventoryUI() {
   document.getElementById('inventoryList').innerHTML = `
-    <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">${myItems.ship.toUpperCase()} SHIP</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
-    <div class="item-card owned"><div class="item-icon">💎</div><div class="item-name">${myItems.weapon.toUpperCase()} WEAPON</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
+    <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">${myItems.ship.toUpperCase()}</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
+    <div class="item-card owned"><div class="item-icon">💎</div><div class="item-name">${myItems.weapon.toUpperCase()}</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
   `;
-}
-
-function handleWithdraw() {
-  let totalDRC = totalSavedScore / 100000;
-  if (totalDRC >= 10000) { alert(`Success! 10,000 DRC sent to ${playerWallet}`); } 
-  else { alert(`You need 10,000 DRC to withdraw. You have ${totalDRC.toFixed(3)} DRC.`); }
 }
 
 // --- GAME ENGINE ---
@@ -200,20 +251,22 @@ function spawnParticles(x, y, color, count, speed) { for (let i = 0; i < count; 
 function updateParticles(dt) { for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx*dt*0.05; p.y += p.vy*dt*0.05; p.life -= p.decay*dt*0.05; if (p.life <= 0) particles.splice(i, 1); } }
 function drawParticles() { for (const p of particles) { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); } ctx.globalAlpha = 1; }
 
-function drawShip(x, y) { ctx.save(); ctx.translate(x, y); const shipColor = itemColors.ship[myItems.ship]; const g = ctx.createRadialGradient(0, 16, 2, 0, 16, 18); g.addColorStop(0, `${shipColor}7`); g.addColorStop(1, `${shipColor}0`); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 20, 18, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = shipColor; ctx.shadowBlur = 14; ctx.strokeStyle = shipColor; ctx.lineWidth = 2; ctx.fillStyle = `${shipColor}3`; ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0; ctx.restore(); }
-function drawBullet(b) { ctx.save(); const bulColor = itemColors.weapon[myItems.weapon]; ctx.shadowColor = bulColor; ctx.shadowBlur = 10; ctx.fillStyle = bulColor; ctx.beginPath(); ctx.roundRect(b.x - 2, b.y - 8, 4, 16, 2); ctx.fill(); ctx.restore(); }
+function drawShip(x, y) { ctx.save(); ctx.translate(x, y); const c = itemColors.ship[myItems.ship] || '#0af3'; const g = ctx.createRadialGradient(0, 16, 2, 0, 16, 18); g.addColorStop(0, `${c}7`); g.addColorStop(1, `${c}0`); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 20, 18, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = `${c}3`; ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0; ctx.restore(); }
+function drawBullet(b) { ctx.save(); ctx.shadowColor = itemColors.weapon[myItems.weapon] || '#0f0'; ctx.shadowBlur = 10; ctx.fillStyle = itemColors.weapon[myItems.weapon] || '#0f0'; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); }
 function drawAsteroid(a) { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot); ctx.shadowColor = '#888'; ctx.shadowBlur = 8; ctx.fillStyle = '#555'; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5; ctx.beginPath(); const p = a.shape; ctx.moveTo(p[0].x, p[0].y); for (let i = 1; i < p.length; i++) ctx.lineTo(p[i].x, p[i].y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
 function drawCoin(c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); const g = ctx.createRadialGradient(-3, -3, 1, 0, 0, c.r); g.addColorStop(0, '#fff700'); g.addColorStop(1, '#c86400'); ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, c.r, c.r * 0.7, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
 function drawBoss(b) {
   ctx.save(); ctx.translate(b.x, b.y);
-  const hueShift = Math.min(currentLevel * 2, 200); const bossColor = `hsl(${hueShift}, 100%, 40%)`; const bossGlow = `hsl(${hueShift}, 100%, 50%)`;
-  ctx.shadowColor = bossGlow; ctx.shadowBlur = 24; ctx.fillStyle = '#200'; ctx.strokeStyle = bossColor; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(-b.w / 2, -b.h / 2, b.w, b.h, 8); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#400'; ctx.strokeStyle = bossGlow; ctx.beginPath(); ctx.moveTo(-b.w / 2, -10); ctx.lineTo(-b.w / 2 - 28, 10); ctx.lineTo(-b.w / 2 - 14, 20); ctx.lineTo(-b.w / 2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const hueShift = Math.min(currentLevel * 2, 200); const bc = `hsl(${hueShift}, 100%, 40%)`; const bg = `hsl(${hueShift}, 100%, 50%)`;
+  ctx.shadowColor = bg; ctx.shadowBlur = 24; ctx.fillStyle = '#200'; ctx.strokeStyle = bc; ctx.lineWidth = 2.5;
+  ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h);
+  ctx.fillStyle = '#400'; ctx.strokeStyle = bg; 
+  ctx.beginPath(); ctx.moveTo(-b.w / 2, -10); ctx.lineTo(-b.w / 2 - 28, 10); ctx.lineTo(-b.w / 2 - 14, 20); ctx.lineTo(-b.w / 2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(b.w / 2, -10); ctx.lineTo(b.w / 2 + 28, 10); ctx.lineTo(b.w / 2 + 14, 20); ctx.lineTo(b.w / 2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = `${bossGlow}6`; ctx.beginPath(); ctx.ellipse(0, -6, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
-  const barW = b.w + 40, barX = -barW / 2, barY = -b.h / 2 - 18; ctx.fillStyle = '#300'; ctx.shadowBlur=0; ctx.beginPath(); ctx.roundRect(barX, barY, barW, 10, 4); ctx.fill();
-  ctx.fillStyle = bossColor; ctx.shadowColor = bossGlow; ctx.shadowBlur = 8; ctx.beginPath(); ctx.roundRect(barX, barY, barW * (b.hp/b.maxHp), 10, 4); ctx.fill();
+  ctx.fillStyle = `${bg}6`; ctx.beginPath(); ctx.ellipse(0, -6, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
+  const barW = b.w + 40, barX = -barW / 2, barY = -b.h / 2 - 18; ctx.shadowBlur=0; ctx.fillStyle = '#300'; ctx.fillRect(barX, barY, barW, 10);
+  ctx.fillStyle = bc; ctx.shadowColor = bg; ctx.shadowBlur = 8; ctx.fillRect(barX, barY, barW * (b.hp/b.maxHp), 10);
   ctx.shadowBlur=0; ctx.fillStyle = '#fff'; ctx.font = 'bold 10px "Share Tech Mono", monospace'; ctx.textAlign = 'center'; ctx.fillText(`LVL ${b.level}  ${b.hp}/${b.maxHp}`, 0, barY + 8);
   ctx.restore();
 }
@@ -268,21 +321,22 @@ function startGame() {
 
 function triggerGameOver() {
   state = 'gameover'; if (animFrameId) cancelAnimationFrame(animFrameId);
-  let newTotal = totalSavedScore + score; let totalDRC = newTotal / 100000;
+  let newTotal = totalSavedScore + score; savedDRC = newTotal / 100000;
   document.getElementById('goLevel').textContent = currentLevel;
   document.getElementById('goScore').textContent = score.toLocaleString();
-  document.getElementById('goDRC').textContent = totalDRC.toFixed(3);
+  document.getElementById('goDRC').textContent = savedDRC.toFixed(3);
   showScreen('gameOverScreen');
   ctx.fillStyle = 'rgba(255,0,0,0.12)'; ctx.fillRect(0, 0, W, H);
-  if (playerWallet) { totalSavedScore = newTotal; db.from('players').upsert({ wallet_address: playerWallet, total_score: newTotal, drc_balance: totalDRC }, { onConflict: 'wallet_address' }); }
+  if (playerWallet && db) { 
+    totalSavedScore = newTotal; 
+    db.from('players').upsert({ wallet_address: playerWallet, total_score: newTotal, drc_balance: savedDRC }, { onConflict: 'wallet_address' }); 
+  }
 }
 
 function getCanvasX(clientX) { return (clientX - canvas.getBoundingClientRect().left) * (W / canvas.getBoundingClientRect().width); }
 canvas.addEventListener('mousemove', e => { if (state === 'playing') ship.targetX = getCanvasX(e.clientX); });
 canvas.addEventListener('touchmove', e => { e.preventDefault(); if (state === 'playing') ship.targetX = getCanvasX(e.touches[0].clientX); }, { passive: false });
 canvas.addEventListener('touchstart', e => { e.preventDefault(); if (state === 'playing') ship.targetX = getCanvasX(e.touches[0].clientX); }, { passive: false });
-
-window.onload = initApp;
 </script>
 </body>
 </html>

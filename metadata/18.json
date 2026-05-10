@@ -1,0 +1,19 @@
+{
+  "name": "DRC Spaceship 1",
+  "description": "An extremely rare, legendary DRC spaceship from the Starship Remit Game.",
+  "image": "https://raw.githubusercontent.com/CryptonDark0/Starship-Remit/main/images/nft/drc_spaceship.png",
+  "attributes": [
+    {
+      "trait_type": "Category",
+      "value": "Spaceship"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Max Supply",
+      "value": 20
+    }
+  ]
+}

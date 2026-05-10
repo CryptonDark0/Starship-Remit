@@ -1,0 +1,15 @@
+{
+  "name": "Laser Bullet 2 ",
+  "description": "Standard ammo for Starship Remit ships.",
+  "image": "https://starshipremit.dailyremit.com/images/nft/greenbullet.png",
+  "attributes": [
+    {
+      "trait_type": "Category",
+      "value": "Consumable"
+    },
+    {
+      "trait_type": "Item",
+      "value": "Laser Bullet"
+    }
+  ]
+}

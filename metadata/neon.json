@@ -1,5 +1,19 @@
 {
-  "name": "Neon Viper Ship",
-  "description": "A fast ship from Starship Remit.",
-  "image": "https://starshipremit.dailyremit.com/images/nft/neon_viper.png"
+  "name": "Starship Remit Spaceship ",
+  "description": "A unique spaceship from the Starship Remit Game collection on BSC.",
+  "image": "https://raw.githubusercontent.com/CryptonDark0/Starship-Remit/main/images/nft/neon_viper.png",
+  "attributes": [
+    {
+      "trait_type": "Collection",
+      "value": "Starship Remit Game"
+    },
+    {
+      "trait_type": "Asset Type",
+      "value": "Spaceship"
+    },
+    {
+      "trait_type": "Chain",
+      "value": "BNB Smart Chain"
+    }
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "Laser Bullet 4",
   "description": "Standard ammo for Starship Remit ships.",
-  "image": "https://raw.githubusercontent.com/CryptonDark0/Starship-Remit/main/images/nft/bluebullet.png",
+  "image": "https://starshipremit.dailyremit.com/images/nft/bluebullet.png",
   "attributes": [
     {
       "trait_type": "Category",

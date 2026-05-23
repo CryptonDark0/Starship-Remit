@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Starship Remit - Web3 P2E</title>
+<title>Starship Remit - Web3 P2E V2</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="application/javascript"></script>
 <style>
@@ -14,24 +14,24 @@
   canvas { display: block; background: #000; border: 1px solid #0ff3; box-shadow: 0 0 20px #0ff2; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
   
   .ui-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; display: flex; justify-content: center; align-items: center; }
-  .screen { pointer-events: auto; position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.97); gap: 12px; padding: 20px; overflow-y: auto; }
+  .screen { pointer-events: auto; position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.95); gap: 12px; padding: 20px; overflow-y: auto; }
   .hidden { display: none !important; }
 
   .game-title { font-weight: 900; font-size: 2rem; color: #0ff; text-shadow: 0 0 20px #0ff; letter-spacing: 0.1em; text-align: center; pointer-events: none; }
-  .sub-text { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #0af8; letter-spacing: 0.2em; pointer-events: none; }
+  .sub-text { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #0af8; letter-spacing: 0.2em; pointer-events: none; text-align: center; }
   
   .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 300px; margin-top: 10px; }
-  .btn { font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.8rem; color: #000; background: linear-gradient(135deg, #0ff 0%, #0af 100%); border: none; padding: 14px 10px; cursor: pointer; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%); box-shadow: 0 0 10px #0ff4; text-transform: uppercase; width: 100%; }
+  .btn { font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.75rem; color: #000; background: linear-gradient(135deg, #0ff 0%, #0af 100%); border: none; padding: 14px 10px; cursor: pointer; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%); box-shadow: 0 0 10px #0ff4; text-transform: uppercase; width: 100%; transition: transform 0.1s; }
   .btn:active { transform: scale(0.95); }
   .btn-gold { background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); }
   .btn-red { background: linear-gradient(135deg, #f44 0%, #a00 100%); color: #fff; }
   .btn-sm { padding: 8px 6px; font-size: 0.65rem; width: auto; }
-  .btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
+  .btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; clip-path: none; }
 
   .store-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #0ff3; padding-bottom: 5px;}
   .item-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 15px; }
   .item-card { background: #111; border: 1px solid #333; padding: 8px; text-align: center; border-radius: 4px; }
-  .item-card.owned { border-color: #0f8; }
+  .item-card.owned { border-color: #0f8; box-shadow: 0 0 8px #0f82; }
   .item-icon { font-size: 1.5rem; margin-bottom: 4px; pointer-events: none; }
   .item-name { font-size: 0.55rem; color: #aaa; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
   .item-price { font-size: 0.55rem; color: #ffd700; margin-bottom: 6px; pointer-events: none; }
@@ -41,20 +41,26 @@
   
   .claim-box { border: 1px solid #0ff3; background: #050510; padding: 20px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; }
   .drc-amount { font-size: 2.5rem; color: #ffd700; text-shadow: 0 0 20px #ffd700; margin: 15px 0; font-weight: 900; }
-  .opensea-banner { background: linear-gradient(135deg, #2081e2 0%, #1565c0 100%); padding: 12px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; cursor: pointer; text-decoration: none; color: white; font-weight: bold; font-family: 'Orbitron'; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  
+  .element-banner { background: linear-gradient(135deg, #2EB5FF 0%, #1A7FD4 100%); padding: 12px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; cursor: pointer; text-decoration: none; color: white; font-weight: bold; font-family: 'Orbitron'; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  
+  /* Toast Notification */
+  #toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #0ff; color: #0ff; padding: 10px 20px; border-radius: 4px; font-family: 'Share Tech Mono'; font-size: 0.8rem; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  #toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div id="gameWrapper">
   <canvas id="gameCanvas" width="480" height="700"></canvas>
+  <div id="toast"></div>
   
   <div class="ui-layer" id="uiLayer">
     <!-- MAIN MENU -->
     <div class="screen" id="mainMenu">
       <div class="game-title">STARSHIP<br>REMIT</div>
-      <div class="sub-text">// COMMAND CENTER //</div>
-      <div class="wallet-status" id="walletStatus">⚠ Connect Wallet to Play</div>
+      <div class="sub-text">// V2 COMMAND CENTER //</div>
+      <div class="wallet-status" id="walletStatus">⚠ Connect Wallet to Save Progress</div>
       <button class="btn btn-red" id="connectBtn">🔓 CONNECT WALLET</button>
       <div class="menu-grid">
         <button class="btn hidden" id="playBtn">▶ PLAY GAME</button>
@@ -64,47 +70,33 @@
       </div>
     </div>
 
-    <!-- STORE -->
+    <!-- STORE (Dynamically Populated) -->
     <div class="screen hidden" id="storeScreen">
       <div class="store-header"><span style="color:#0ff; font-size:1rem;">🛒 MARKETPLACE</span><button class="btn btn-sm" id="backFromStore">← BACK</button></div>
       <div class="sub-text">STARSHIPS</div>
-      <div class="item-grid">
-        <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">Standard</div><div class="item-price" style="color:#0f8;">FREE</div><button class="btn btn-sm" disabled>EQUIPPED</button></div>
-        <div class="item-card"><div class="item-icon">✈️</div><div class="item-name">Neon Viper</div><div class="item-price">500 DRC</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="neon" data-amt="500">BUY</button></div>
-        <div class="item-card"><div class="item-icon">🛸</div><div class="item-name">Void Cruiser</div><div class="item-price">0.1 BNB</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="void" data-amt="0.1" data-curr="BNB">BUY</button></div>
-        <div class="item-card"><div class="item-icon">🌀</div><div class="item-name">Galaxy</div><div class="item-price">1500 DRC</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="galaxy" data-amt="1500">BUY</button></div>
-        <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Phoenix</div><div class="item-price">0.5 BNB</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="phoenix" data-amt="0.5" data-curr="BNB">BUY</button></div>
-        <div class="item-card"><div class="item-icon">💎</div><div class="item-name">Diamond</div><div class="item-price">$5 USD</div><button class="btn btn-sm btn-gold buy-btn" data-type="ship" data-id="diamond" data-amt="5" data-curr="USD">BUY</button></div>
-      </div>
+      <div class="item-grid" id="storeShips"></div>
       <div class="sub-text">WEAPONS</div>
-      <div class="item-grid">
-        <div class="item-card owned"><div class="item-icon">💚</div><div class="item-name">Laser</div><div class="item-price" style="color:#0f8;">FREE</div><button class="btn btn-sm" disabled>EQUIPPED</button></div>
-        <div class="item-card"><div class="item-icon">🔥</div><div class="item-name">Plasma</div><div class="item-price">1000 DRC</div><button class="btn btn-sm btn-gold buy-btn" data-type="weapon" data-id="plasma" data-amt="1000">BUY</button></div>
-        <div class="item-card"><div class="item-icon">⚡</div><div class="item-name">Railgun</div><div class="item-price">0.2 BNB</div><button class="btn btn-sm btn-gold buy-btn" data-type="weapon" data-id="rail" data-amt="0.2" data-curr="BNB">BUY</button></div>
-      </div>
+      <div class="item-grid" id="storeWeapons"></div>
     </div>
 
-    <!-- INVENTORY & OPENSEA -->
+    <!-- INVENTORY & ELEMENT.MARKET -->
     <div class="screen hidden" id="inventoryScreen">
-      <div class="store-header"><span style="color:#0ff; font-size:1rem;">💼 MY NFTS</span><button class="btn btn-sm" id="backFromInv">← BACK</button></div>
-      <div id="inventoryList" class="item-grid" style="margin-top:20px;">
-        <div class="item-card owned"><div class="item-icon">🚀</div><div class="item-name">Standard</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
-        <div class="item-card owned"><div class="item-icon">💚</div><div class="item-name">Laser</div><div class="item-price" style="color:#0f8;">OWNED</div><button class="btn btn-sm" disabled>ACTIVE</button></div>
-      </div>
-      <div class="sub-text" style="margin-top:20px; color:#fff;">BUY & TRADE ON OPENSEA</div>
-      <a href="https://opensea.io/StarshipRemit" target="_blank" class="opensea-banner"><span>🌊</span> View Collection</a>
+      <div class="store-header"><span style="color:#0ff; font-size:1rem;">💼 MY NFTS & ASSETS</span><button class="btn btn-sm" id="backFromInv">← BACK</button></div>
+      <div id="inventoryList" class="item-grid" style="margin-top:20px;"></div>
+      <div class="sub-text" style="margin-top:20px; color:#fff;">BUY & TRADE NFTS ON ELEMENT</div>
+      <a href="https://element.market/account/0x1332c3296aa604985110b3a375937e1ae12433a8" target="_blank" class="element-banner"><span>💎</span> View Collection</a>
     </div>
 
     <!-- CLAIM DRC DASHBOARD -->
     <div class="screen hidden" id="claimScreen">
       <div class="store-header"><span style="color:#ffd700; font-size:1rem;">💰 DRC EARNINGS</span><button class="btn btn-sm" id="backFromClaim">← BACK</button></div>
       <div class="claim-box">
-        <div class="sub-text">AVAILABLE BALANCE</div>
+        <div class="sub-text">AVAILABLE BALANCE (SYNCED TO DB)</div>
         <div class="drc-amount" id="claimDrcAmount">0.000 DRC</div>
         <div class="sub-text" style="font-size:0.6rem; color:#888;">Connected Wallet:</div>
         <div class="wallet-status" id="claimWalletAddress" style="color:#0ff; word-break:break-all; font-size:0.6rem; margin-top:5px;">0x000...000</div>
         <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;">WITHDRAW TO BSC</button>
-        <div class="sub-text hidden" id="withdrawWarn" style="color:#f88; font-size:0.6rem; margin-top:10px;">Need 10,000 DRC.</div>
+        <div class="sub-text hidden" id="withdrawWarn" style="color:#f88; font-size:0.6rem; margin-top:10px;">Need 10,000 DRC to withdraw.</div>
       </div>
     </div>
 
@@ -121,26 +113,139 @@
 </div>
 
 <script>
-// --- SAFELY LOAD DEPENDENCIES ---
-let db;
-try { db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC'); } catch(e) { console.error(e); }
+// --- V2 ARCHITECTURE: DATA-DRIVEN CONFIG ---
+// Future-proof: Add new skins here in 2 years, UI updates automatically!
+const GAME_DATABASE = {
+  ships: [
+    { id: 'standard', name: 'Standard', icon: '🚀', price: 0, curr: 'FREE', color: '#0af', owned: true },
+    { id: 'neon', name: 'Neon Viper', icon: '✈️', price: 500, curr: 'DRC', color: '#f0f', owned: false },
+    { id: 'void', name: 'Void Cruiser', icon: '🛸', price: 0.1, curr: 'BNB', color: '#808', owned: false },
+    { id: 'galaxy', name: 'Galaxy', icon: '🌀', price: 1500, curr: 'DRC', color: '#48f', owned: false },
+    { id: 'phoenix', name: 'Phoenix', icon: '🔥', price: 0.5, curr: 'BNB', color: '#f80', owned: false },
+    { id: 'diamond', name: 'Diamond', icon: '💎', price: 5, curr: 'USD', color: '#0ff', owned: false }
+  ],
+  weapons: [
+    { id: 'laser', name: 'Laser', icon: '💚', price: 0, curr: 'FREE', color: '#0f0', owned: true },
+    { id: 'plasma', name: 'Plasma', icon: '🔥', price: 1000, curr: 'DRC', color: '#f80', owned: false },
+    { id: 'rail', name: 'Railgun', icon: '⚡', price: 0.2, curr: 'BNB', color: '#08f', owned: false }
+  ]
+};
 
-let playerWallet = null; let totalSavedScore = 0; let savedDRC = 0;
+let playerWallet = null; 
+let totalSavedScore = 0; 
+let savedDRC = 0;
 let myItems = { ship: 'standard', weapon: 'laser' }; 
-const itemColors = { ship: { standard: '#0af3', neon: '#f0f', void: '#808', galaxy: '#48f', phoenix: '#f80', diamond: '#0ff' }, weapon: { laser: '#0f0', plasma: '#f80', rail: '#08f' } };
+let nftMultiplier = 1.0; // V2 P2E: x1.5 if NFT is detected
 
-// --- UI LOGIC (SAFE, NO CRASHES) ---
+// --- SUPABASE & PERSISTENCE FIX ---
+let db;
+try { 
+  // IMPORTANT: Ensure these Supabase credentials are correct and the table 'players' exists with columns: wallet_address (PK), total_score (int8), drc_balance (float8)
+  db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC'); 
+} catch(e) { console.error("Supabase Init Error:", e); }
+
+// Fallback local storage so progress is NEVER lost on refresh if DB fails
+function loadLocalFallback() {
+  totalSavedScore = parseInt(localStorage.getItem('sr_score') || '0');
+  savedDRC = parseFloat(localStorage.getItem('sr_drc') || '0');
+}
+
+function saveLocalFallback() {
+  localStorage.setItem('sr_score', totalSavedScore);
+  localStorage.setItem('sr_drc', savedDRC);
+}
+
+// --- UI LOGIC & TOAST ---
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
+// Dynamic UI Rendering based on GAME_DATABASE
+function renderStore() {
+  const shipGrid = document.getElementById('storeShips');
+  const weapGrid = document.getElementById('storeWeapons');
+  shipGrid.innerHTML = '';
+  weapGrid.innerHTML = '';
+
+  GAME_DATABASE.ships.forEach(item => {
+    shipGrid.innerHTML += createItemCard(item, 'ship');
+  });
+  GAME_DATABASE.weapons.forEach(item => {
+    weapGrid.innerHTML += createItemCard(item, 'weapon');
+  });
+
+  // Attach buy events
+  document.querySelectorAll('.buy-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      if(!playerWallet) return showToast("Connect wallet first!");
+      handlePurchase(this.dataset.type, this.dataset.id);
+    });
+  });
+}
+
+function createItemCard(item, type) {
+  const ownedClass = item.owned ? 'owned' : '';
+  const priceText = item.price === 0 ? '<span style="color:#0f8;">FREE</span>' : `${item.price} ${item.curr}`;
+  const btnText = item.owned ? (myItems[type] === item.id ? 'EQUIPPED' : 'EQUIP') : 'BUY';
+  const btnClass = item.owned ? '' : 'btn-gold';
+  const disabledAttr = (item.owned && myItems[type] === item.id) ? 'disabled' : '';
+  
+  return `<div class="item-card ${ownedClass}">
+    <div class="item-icon">${item.icon}</div>
+    <div class="item-name">${item.name}</div>
+    <div class="item-price">${priceText}</div>
+    <button class="btn btn-sm ${btnClass} buy-btn" data-type="${type}" data-id="${item.id}" ${disabledAttr}>${btnText}</button>
+  </div>`;
+}
+
+function renderInventory() {
+  const invGrid = document.getElementById('inventoryList');
+  invGrid.innerHTML = '';
+  const allItems = [...GAME_DATABASE.ships.map(i => ({...i, type: 'ship'})), ...GAME_DATABASE.weapons.map(i => ({...i, type: 'weapon'}))];
+  
+  allItems.forEach(item => {
+    if(item.owned) {
+      invGrid.innerHTML += `<div class="item-card owned">
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-name">${item.name}</div>
+        <div class="item-price" style="color:#0f8;">OWNED</div>
+      </div>`;
+    }
+  });
+}
+
+function handlePurchase(type, id) {
+  // Mock purchase logic for V2
+  showToast(`Processing TX: ${id}...`);
+  setTimeout(() => {
+    const list = type === 'ship' ? GAME_DATABASE.ships : GAME_DATABASE.weapons;
+    const item = list.find(i => i.id === id);
+    if(item) {
+      item.owned = true;
+      myItems[type] = id; // Auto-equip
+      showToast(`Successfully unlocked ${item.name}!`);
+      renderStore();
+      renderInventory();
+    }
+  }, 800);
+}
+
+// --- WALLET & WEB3 INTEGRATION ---
 window.onload = function() {
-  // Attach button events safely
+  loadLocalFallback(); // Load offline progress immediately
+  
   document.getElementById('connectBtn').addEventListener('click', connectWallet);
   document.getElementById('playBtn').addEventListener('click', startGame);
-  document.getElementById('storeBtn').addEventListener('click', () => showScreen('storeScreen'));
-  document.getElementById('inventoryBtn').addEventListener('click', () => showScreen('inventoryScreen'));
+  document.getElementById('storeBtn').addEventListener('click', () => { renderStore(); showScreen('storeScreen'); });
+  document.getElementById('inventoryBtn').addEventListener('click', () => { renderInventory(); showScreen('inventoryScreen'); });
   document.getElementById('withdrawMenuBtn').addEventListener('click', showClaimScreen);
   document.getElementById('backFromStore').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('backFromInv').addEventListener('click', () => showScreen('mainMenu'));
@@ -149,17 +254,11 @@ window.onload = function() {
   document.getElementById('menuFromOver').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('withdrawNowBtn').addEventListener('click', handleWithdraw);
 
-  // Attach store buy buttons
-  document.querySelectorAll('.buy-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      if(!playerWallet) return alert("Connect wallet first!");
-      alert(`Mock TX: Buy ${this.dataset.id}`);
-      myItems[this.dataset.type] = this.dataset.id;
-      showScreen('inventoryScreen');
-    });
-  });
+  // Background Animation Loop for Menu
+  initStars();
+  requestAnimationFrame(menuLoop);
 
-  // Auto-login if already connected
+  // Auto-login
   if (typeof window.ethereum !== 'undefined') {
     window.ethereum.request({ method: 'eth_accounts' }).then(accs => { if (accs.length > 0) setupWalletUI(accs[0]); }).catch(()=>{});
   }
@@ -169,38 +268,73 @@ async function connectWallet() {
   if (typeof window.ethereum !== 'undefined') {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts.length > 0) setupWalletUI(accounts[0]);
-    } catch (err) { alert("Rejected."); }
+      if (accounts.length > 0) await setupWalletUI(accounts[0]);
+    } catch (err) { showToast("Wallet connection rejected."); }
   } else {
-    alert("NO WALLET.\n\n1. PC: Install MetaMask.\n2. Mobile: Open in Trust Wallet DApp browser.");
+    showToast("No Web3 Wallet. Open in Trust Wallet dApp browser.");
   }
 }
 
 async function setupWalletUI(address) {
   playerWallet = address;
-  document.getElementById('walletStatus').innerText = '✅ Connected: ' + playerWallet.substring(0, 6) + '...';
+  document.getElementById('walletStatus').innerText = '✅ ' + playerWallet.substring(0, 6) + '...' + playerWallet.substring(38);
   document.getElementById('walletStatus').style.color = '#0f8';
   document.getElementById('connectBtn').classList.add('hidden');
   ['playBtn', 'storeBtn', 'inventoryBtn', 'withdrawMenuBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-  if(db) {
-    const { data } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
-    if (data) { totalSavedScore = data.total_score; savedDRC = data.drc_balance || 0; } 
-    else { await db.from('players').insert({ wallet_address: playerWallet, total_score: 0, drc_balance: 0 }); }
+  
+  await fetchDBData();
+  checkNFTMultiplier(); // V2 P2E Feature
+}
+
+async function fetchDBData() {
+  if(!playerWallet || !db) return;
+  try {
+    const { data, error } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
+    if (data) {
+      // Always take the highest value between local fallback and DB to prevent loss
+      totalSavedScore = Math.max(data.total_score || 0, totalSavedScore);
+      savedDRC = Math.max(data.drc_balance || 0, savedDRC);
+    } else {
+      // New player
+      await db.from('players').insert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC });
+    }
+  } catch (e) {
+    console.error("DB Fetch Error", e);
   }
 }
 
+// V2: NFT P2E Integration Check
+async function checkNFTMultiplier() {
+  /* 
+   * WHEN READY IN THE FUTURE: Replace this mock logic with actual ERC721 contract reading using ethers.js
+   * Example: const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ABI, provider);
+   * const balance = await contract.balanceOf(playerWallet);
+   * if(balance > 0) nftMultiplier = 1.5;
+   */
+  nftMultiplier = 1.0; // Base multiplier. Change to 1.5 if they hold NFTs
+  showToast(`P2E Multiplier: x${nftMultiplier}`);
+}
+
 async function showClaimScreen() {
-  if(!playerWallet) return alert("Connect wallet first!");
+  if(!playerWallet) return showToast("Connect wallet first!");
   showScreen('claimScreen');
   document.getElementById('claimWalletAddress').innerText = playerWallet;
   document.getElementById('claimDrcAmount').innerText = savedDRC.toFixed(3) + " DRC";
-  if (savedDRC >= 10000) { document.getElementById('withdrawNowBtn').classList.remove('hidden'); document.getElementById('withdrawWarn').classList.add('hidden'); } 
-  else { document.getElementById('withdrawNowBtn').classList.add('hidden'); document.getElementById('withdrawWarn').classList.remove('hidden'); document.getElementById('withdrawWarn').innerText = `Need 10k DRC. You have ${savedDRC.toFixed(3)} DRC.`; }
+  if (savedDRC >= 10000) { 
+    document.getElementById('withdrawNowBtn').classList.remove('hidden'); 
+    document.getElementById('withdrawWarn').classList.add('hidden'); 
+  } else { 
+    document.getElementById('withdrawNowBtn').classList.add('hidden'); 
+    document.getElementById('withdrawWarn').classList.remove('hidden'); 
+    document.getElementById('withdrawWarn').innerText = `Need 10,000 DRC. You have ${savedDRC.toFixed(3)} DRC.`; 
+  }
 }
 
-function handleWithdraw() { if(savedDRC >= 10000) alert("SUCCESS! 10,000 DRC processing to BSC wallet."); }
+function handleWithdraw() { 
+  if(savedDRC >= 10000) showToast("SUCCESS! 10,000 DRC processing to BSC wallet."); 
+}
 
-// --- GAME ENGINE (100% COMPATIBLE) ---
+// --- GAME ENGINE (ROBUST V2) ---
 let shipConfig = { speed: 8, fireRate: 200, damage: 1 };
 const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
@@ -219,13 +353,16 @@ function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
 
 function drawShip(x, y) { 
   ctx.save(); ctx.translate(x, y); 
-  const c = itemColors.ship[myItems.ship] || '#0af'; 
+  const c = GAME_DATABASE.ships.find(s => s.id === myItems.ship).color; 
   ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = c+'3'; 
   ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); 
   ctx.shadowBlur = 0; ctx.restore(); 
 }
 
-function drawBullet(b) { ctx.save(); ctx.shadowColor = itemColors.weapon[myItems.weapon]||'#0f0'; ctx.shadowBlur = 10; ctx.fillStyle = itemColors.weapon[myItems.weapon]||'#0f0'; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); }
+function drawBullet(b) { 
+  const c = GAME_DATABASE.weapons.find(w => w.id === myItems.weapon).color;
+  ctx.save(); ctx.shadowColor = c; ctx.shadowBlur = 10; ctx.fillStyle = c; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); 
+}
 
 function drawAsteroid(a) { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot); ctx.fillStyle = '#555'; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a.shape[0].x, a.shape[0].y); for (let i = 1; i < a.shape.length; i++) ctx.lineTo(a.shape[i].x, a.shape[i].y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
 function drawCoin(c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffa500'; ctx.beginPath(); ctx.arc(0, 0, c.r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
@@ -248,12 +385,22 @@ function spawnBoss() { let l=Math.min(currentLevel,200); boss={x:W/2,y:80,w:90,h
 function circleRect(cx,cy,cr,rx,ry,rw,rh){let nx=Math.max(rx-rw/2,Math.min(cx,rx+rw/2));let ny=Math.max(ry-rh/2,Math.min(cy,ry+rh/2));return Math.hypot(cx-nx,cy-ny)<cr;}
 
 function drawHUD() {
-  let drc = ((score + totalSavedScore) / 100000).toFixed(3);
+  let drc = (((score * nftMultiplier) + totalSavedScore) / 100000).toFixed(3); // Apply P2E multiplier
   ctx.save(); ctx.font = 'bold 14px Orbitron'; ctx.textBaseline = 'top'; 
   ctx.shadowColor = '#0ff'; ctx.shadowBlur = 8; ctx.fillStyle = '#0ff'; ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${score.toLocaleString()}`, 14, 12);
   ctx.shadowColor = '#f44'; ctx.fillStyle = '#f44'; ctx.textAlign = 'center'; ctx.fillText(`LVL: ${currentLevel}`, W / 2, 12);
   ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'right'; ctx.fillText(`DRC: ${drc}`, W - 14, 12);
+  if(nftMultiplier > 1) { ctx.fillStyle = '#0f8'; ctx.font = '10px Orbitron'; ctx.fillText(`x${nftMultiplier} NFT`, W - 14, 30); }
   ctx.restore();
+}
+
+// Menu background loop so screen isn't black
+function menuLoop(timestamp) {
+  if (state === 'playing') return;
+  let dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  updateStars(dt); drawStars();
+  requestAnimationFrame(menuLoop);
 }
 
 function gameLoop(timestamp) {
@@ -293,20 +440,52 @@ function gameLoop(timestamp) {
 function startGame() {
   score = 0; currentLevel = 1; bullets=[];asteroids=[];coins=[];bossBullets=[];particles=[];boss=null;
   ship.x = W/2; ship.targetX = W/2; lastBulletTime=0;lastAsteroidTime=0;lastCoinTime=0;lastBossBulletTime=0;
-  initStars(); showScreen('gameOverScreen'); // Hide all UI by forcing game over screen hidden
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
   state = 'playing'; prevTimestamp = performance.now(); animFrameId = requestAnimationFrame(gameLoop);
 }
 
-function triggerGameOver() {
+async function triggerGameOver() {
   state = 'gameover'; if (animFrameId) cancelAnimationFrame(animFrameId);
-  let newTotal = totalSavedScore + score; savedDRC = newTotal / 100000;
+  
+  // V2 P2E Logic: Calculate DRC with NFT multiplier
+  let earnedScoreWithMultiplier = score * nftMultiplier;
+  let newTotal = totalSavedScore + earnedScoreWithMultiplier;
+  let newDRC = newTotal / 100000;
+
   document.getElementById('goLevel').textContent = currentLevel;
   document.getElementById('goScore').textContent = score.toLocaleString();
-  document.getElementById('goDRC').textContent = savedDRC.toFixed(3);
+  document.getElementById('goDRC').textContent = (earnedScoreWithMultiplier / 100000).toFixed(3);
+  
+  // Immediate UI update & local save
+  totalSavedScore = newTotal;
+  savedDRC = newDRC;
+  saveLocalFallback();
+  
   showScreen('gameOverScreen');
   ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0, 0, W, H);
-  if(playerWallet && db) { totalSavedScore = newTotal; db.from('players').upsert({wallet_address:playerWallet,total_score:newTotal,drc_balance:savedDRC},{onConflict:'wallet_address'}); }
+  
+  // Restart menu background animation
+  prevTimestamp = performance.now(); 
+  requestAnimationFrame(menuLoop);
+
+  // Attempt Database Sync
+  if(playerWallet && db) {
+    try {
+      const { error } = await db.from('players').upsert({
+        wallet_address: playerWallet, 
+        total_score: newTotal, 
+        drc_balance: newDRC
+      }, { onConflict: 'wallet_address' });
+      
+      if(error) throw error;
+      showToast("Progress Synced to DB!");
+    } catch(e) {
+      console.error("DB Save Error", e);
+      showToast("Saved Locally (DB Sync Failed)");
+    }
+  } else {
+    showToast("Progress Saved Locally");
+  }
 }
 
 // INPUT HANDLERS

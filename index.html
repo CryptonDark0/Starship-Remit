@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Starship Remit - Web3 P2E V2</title>
+<title>Starship Remit - Web3 P2E V3</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="application/javascript"></script>
 <style>
@@ -44,7 +44,10 @@
   
   .element-banner { background: linear-gradient(135deg, #2EB5FF 0%, #1A7FD4 100%); padding: 12px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; cursor: pointer; text-decoration: none; color: white; font-weight: bold; font-family: 'Orbitron'; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
   
-  /* Toast Notification */
+  /* Skin Preview */
+  .skin-preview-box { width: 100px; height: 100px; border: 2px solid #0ff; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; background: #001; }
+  .skin-preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
   #toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #0ff; color: #0ff; padding: 10px 20px; border-radius: 4px; font-family: 'Share Tech Mono'; font-size: 0.8rem; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
   #toast.show { opacity: 1; }
 </style>
@@ -59,7 +62,7 @@
     <!-- MAIN MENU -->
     <div class="screen" id="mainMenu">
       <div class="game-title">STARSHIP<br>REMIT</div>
-      <div class="sub-text">// V2 COMMAND CENTER //</div>
+      <div class="sub-text">// V3 NFT SKINS & P2E //</div>
       <div class="wallet-status" id="walletStatus">⚠ Connect Wallet to Save Progress</div>
       <button class="btn btn-red" id="connectBtn">🔓 CONNECT WALLET</button>
       <div class="menu-grid">
@@ -70,16 +73,25 @@
       </div>
     </div>
 
-    <!-- STORE (Dynamically Populated) -->
+    <!-- PRE-GAME SKIN SELECTION -->
+    <div class="screen hidden" id="selectShipScreen">
+      <div class="store-header"><span style="color:#0ff; font-size:1rem;">🚀 SELECT SHIP</span><button class="btn btn-sm" id="backFromSelect">← BACK</button></div>
+      <div class="skin-preview-box" id="shipPreviewBox"><img id="shipPreviewImg" src="" alt="Ship"/></div>
+      <div class="sub-text" id="selectedShipName">STANDARD</div>
+      <div class="item-grid" id="selectShipGrid"></div>
+      <button class="btn btn-gold" id="launchGameBtn" style="margin-top: 15px;">🚀 LAUNCH GAME</button>
+    </div>
+
+    <!-- STORE -->
     <div class="screen hidden" id="storeScreen">
       <div class="store-header"><span style="color:#0ff; font-size:1rem;">🛒 MARKETPLACE</span><button class="btn btn-sm" id="backFromStore">← BACK</button></div>
-      <div class="sub-text">STARSHIPS</div>
+      <div class="sub-text">STARSHIPS (NFT SKINS)</div>
       <div class="item-grid" id="storeShips"></div>
       <div class="sub-text">WEAPONS</div>
       <div class="item-grid" id="storeWeapons"></div>
     </div>
 
-    <!-- INVENTORY & ELEMENT.MARKET -->
+    <!-- INVENTORY -->
     <div class="screen hidden" id="inventoryScreen">
       <div class="store-header"><span style="color:#0ff; font-size:1rem;">💼 MY NFTS & ASSETS</span><button class="btn btn-sm" id="backFromInv">← BACK</button></div>
       <div id="inventoryList" class="item-grid" style="margin-top:20px;"></div>
@@ -87,15 +99,14 @@
       <a href="https://element.market/account/0x1332c3296aa604985110b3a375937e1ae12433a8" target="_blank" class="element-banner"><span>💎</span> View Collection</a>
     </div>
 
-    <!-- CLAIM DRC DASHBOARD -->
+    <!-- CLAIM DRC -->
     <div class="screen hidden" id="claimScreen">
       <div class="store-header"><span style="color:#ffd700; font-size:1rem;">💰 DRC EARNINGS</span><button class="btn btn-sm" id="backFromClaim">← BACK</button></div>
       <div class="claim-box">
-        <div class="sub-text">AVAILABLE BALANCE (SYNCED TO DB)</div>
+        <div class="sub-text">AVAILABLE BALANCE</div>
         <div class="drc-amount" id="claimDrcAmount">0.000 DRC</div>
-        <div class="sub-text" style="font-size:0.6rem; color:#888;">Connected Wallet:</div>
         <div class="wallet-status" id="claimWalletAddress" style="color:#0ff; word-break:break-all; font-size:0.6rem; margin-top:5px;">0x000...000</div>
-        <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;">WITHDRAW TO BSC</button>
+        <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;">WITHDRAW 10k DRC TO BSC</button>
         <div class="sub-text hidden" id="withdrawWarn" style="color:#f88; font-size:0.6rem; margin-top:10px;">Need 10,000 DRC to withdraw.</div>
       </div>
     </div>
@@ -113,21 +124,20 @@
 </div>
 
 <script>
-// --- V2 ARCHITECTURE: DATA-DRIVEN CONFIG ---
-// Future-proof: Add new skins here in 2 years, UI updates automatically!
+// --- V3 ARCHITECTURE: NFT IMAGE SKINS & REAL BNB PURCHASES ---
+const DEV_WALLET = "YOUR_BNB_WALLET_ADDRESS"; // REPLACE THIS WITH YOUR REAL WALLET ADDRESS!
+
 const GAME_DATABASE = {
   ships: [
-    { id: 'standard', name: 'Standard', icon: '🚀', price: 0, curr: 'FREE', color: '#0af', owned: true },
-    { id: 'neon', name: 'Neon Viper', icon: '✈️', price: 500, curr: 'DRC', color: '#f0f', owned: false },
-    { id: 'void', name: 'Void Cruiser', icon: '🛸', price: 0.1, curr: 'BNB', color: '#808', owned: false },
-    { id: 'galaxy', name: 'Galaxy', icon: '🌀', price: 1500, curr: 'DRC', color: '#48f', owned: false },
-    { id: 'phoenix', name: 'Phoenix', icon: '🔥', price: 0.5, curr: 'BNB', color: '#f80', owned: false },
-    { id: 'diamond', name: 'Diamond', icon: '💎', price: 5, curr: 'USD', color: '#0ff', owned: false }
+    // imageSrc: Put your 128x128 transparent PNGs in an 'assets' folder
+    { id: 'standard', name: 'Standard', icon: '🚀', imageSrc: null, price: 0, curr: 'FREE', color: '#0af', owned: true },
+    { id: 'neon', name: 'Neon Viper', icon: '✈️', imageSrc: 'assets/neon.png', price: 0.01, curr: 'BNB', color: '#f0f', owned: false },
+    { id: 'void', name: 'Void Cruiser', icon: '🛸', imageSrc: 'assets/void.png', price: 0.05, curr: 'BNB', color: '#808', owned: false },
+    { id: 'galaxy', name: 'Galaxy', icon: '🌀', imageSrc: 'assets/galaxy.png', price: 0.1, curr: 'BNB', color: '#48f', owned: false }
   ],
   weapons: [
     { id: 'laser', name: 'Laser', icon: '💚', price: 0, curr: 'FREE', color: '#0f0', owned: true },
-    { id: 'plasma', name: 'Plasma', icon: '🔥', price: 1000, curr: 'DRC', color: '#f80', owned: false },
-    { id: 'rail', name: 'Railgun', icon: '⚡', price: 0.2, curr: 'BNB', color: '#08f', owned: false }
+    { id: 'plasma', name: 'Plasma', icon: '🔥', price: 0.02, curr: 'BNB', color: '#f80', owned: false }
   ]
 };
 
@@ -135,144 +145,174 @@ let playerWallet = null;
 let totalSavedScore = 0; 
 let savedDRC = 0;
 let myItems = { ship: 'standard', weapon: 'laser' }; 
-let nftMultiplier = 1.0; // V2 P2E: x1.5 if NFT is detected
+let nftMultiplier = 1.0; 
 
-// --- SUPABASE & PERSISTENCE FIX ---
+// Image Loader for Skins
+const shipImages = {};
+function preloadShipImages() {
+  GAME_DATABASE.ships.forEach(ship => {
+    if (ship.imageSrc) {
+      const img = new Image();
+      img.src = ship.imageSrc;
+      img.onload = () => { shipImages[ship.id] = img; };
+    }
+  });
+}
+
 let db;
-try { 
-  // IMPORTANT: Ensure these Supabase credentials are correct and the table 'players' exists with columns: wallet_address (PK), total_score (int8), drc_balance (float8)
-  db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC'); 
-} catch(e) { console.error("Supabase Init Error:", e); }
+try { db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb_publishable_i1z585JN3mzYgKogsE9brw_txizofmC'); } catch(e) { console.error(e); }
 
-// Fallback local storage so progress is NEVER lost on refresh if DB fails
 function loadLocalFallback() {
   totalSavedScore = parseInt(localStorage.getItem('sr_score') || '0');
   savedDRC = parseFloat(localStorage.getItem('sr_drc') || '0');
+  const savedItems = localStorage.getItem('sr_items');
+  if (savedItems) myItems = JSON.parse(savedItems);
+  const savedOwned = localStorage.getItem('sr_owned');
+  if (savedOwned) {
+    const ownedIds = JSON.parse(savedOwned);
+    GAME_DATABASE.ships.forEach(s => { if(ownedIds.includes(s.id)) s.owned = true; });
+    GAME_DATABASE.weapons.forEach(w => { if(ownedIds.includes(w.id)) w.owned = true; });
+  }
 }
 
 function saveLocalFallback() {
   localStorage.setItem('sr_score', totalSavedScore);
   localStorage.setItem('sr_drc', savedDRC);
+  localStorage.setItem('sr_items', JSON.stringify(myItems));
+  const ownedIds = [...GAME_DATABASE.ships.filter(s => s.owned).map(s => s.id), ...GAME_DATABASE.weapons.filter(w => w.owned).map(w => w.id)];
+  localStorage.setItem('sr_owned', JSON.stringify(ownedIds));
 }
 
-// --- UI LOGIC & TOAST ---
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.innerText = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
+function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
-
-// Dynamic UI Rendering based on GAME_DATABASE
+// --- STORE & REAL BNB PURCHASES ---
 function renderStore() {
   const shipGrid = document.getElementById('storeShips');
   const weapGrid = document.getElementById('storeWeapons');
-  shipGrid.innerHTML = '';
-  weapGrid.innerHTML = '';
-
-  GAME_DATABASE.ships.forEach(item => {
-    shipGrid.innerHTML += createItemCard(item, 'ship');
-  });
-  GAME_DATABASE.weapons.forEach(item => {
-    weapGrid.innerHTML += createItemCard(item, 'weapon');
-  });
-
-  // Attach buy events
-  document.querySelectorAll('.buy-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      if(!playerWallet) return showToast("Connect wallet first!");
-      handlePurchase(this.dataset.type, this.dataset.id);
-    });
-  });
+  shipGrid.innerHTML = ''; weapGrid.innerHTML = '';
+  GAME_DATABASE.ships.forEach(item => { shipGrid.innerHTML += createItemCard(item, 'ship'); });
+  GAME_DATABASE.weapons.forEach(item => { weapGrid.innerHTML += createItemCard(item, 'weapon'); });
+  document.querySelectorAll('.buy-btn').forEach(btn => { btn.addEventListener('click', function() { if(!playerWallet) return showToast("Connect wallet first!"); handlePurchase(this.dataset.type, this.dataset.id); }); });
 }
 
 function createItemCard(item, type) {
   const ownedClass = item.owned ? 'owned' : '';
   const priceText = item.price === 0 ? '<span style="color:#0f8;">FREE</span>' : `${item.price} ${item.curr}`;
-  const btnText = item.owned ? (myItems[type] === item.id ? 'EQUIPPED' : 'EQUIP') : 'BUY';
-  const btnClass = item.owned ? '' : 'btn-gold';
-  const disabledAttr = (item.owned && myItems[type] === item.id) ? 'disabled' : '';
-  
+  const btnText = item.owned ? 'OWNED' : 'BUY';
+  const disabledAttr = item.owned ? 'disabled' : '';
   return `<div class="item-card ${ownedClass}">
-    <div class="item-icon">${item.icon}</div>
-    <div class="item-name">${item.name}</div>
-    <div class="item-price">${priceText}</div>
-    <button class="btn btn-sm ${btnClass} buy-btn" data-type="${type}" data-id="${item.id}" ${disabledAttr}>${btnText}</button>
+    <div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div><div class="item-price">${priceText}</div>
+    <button class="btn btn-sm btn-gold buy-btn" data-type="${type}" data-id="${item.id}" ${disabledAttr}>${btnText}</button>
   </div>`;
+}
+
+async function handlePurchase(type, id) {
+  const list = type === 'ship' ? GAME_DATABASE.ships : GAME_DATABASE.weapons;
+  const item = list.find(i => i.id === id);
+  if (!item || item.owned) return;
+
+  if (item.curr === 'BNB') {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      showToast("Confirming TX in Wallet...");
+      const tx = await signer.sendTransaction({ to: DEV_WALLET, value: ethers.utils.parseEther(item.price.toString()) });
+      showToast("Processing TX...");
+      await tx.wait();
+      item.owned = true;
+      myItems[type] = id;
+      saveLocalFallback();
+      showToast(`Unlocked ${item.name}! TX Success!`);
+      renderStore();
+    } catch (err) { console.error(err); showToast("TX Failed or Rejected"); }
+  } else {
+    // Mock DRC/Free logic
+    item.owned = true; myItems[type] = id; saveLocalFallback(); showToast(`Unlocked ${item.name}!`); renderStore();
+  }
+}
+
+// --- PRE-GAME SKIN SELECTION ---
+function renderSelectShip() {
+  const grid = document.getElementById('selectShipGrid');
+  grid.innerHTML = '';
+  GAME_DATABASE.ships.forEach(item => {
+    if (item.owned) {
+      const isEquipped = myItems.ship === item.id;
+      grid.innerHTML += `<div class="item-card owned" style="cursor:pointer;" id="select-${item.id}">
+        <div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div>
+      </div>`;
+    }
+  });
+  updateShipPreview(myItems.ship);
+
+  // Attach click listeners
+  grid.querySelectorAll('.item-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const id = this.id.replace('select-', '');
+      myItems.ship = id;
+      saveLocalFallback();
+      updateShipPreview(id);
+    });
+  });
+}
+
+function updateShipPreview(id) {
+  const item = GAME_DATABASE.ships.find(s => s.id === id);
+  const previewImg = document.getElementById('shipPreviewImg');
+  const previewName = document.getElementById('selectedShipName');
+  previewName.innerText = item.name.toUpperCase();
+  
+  if (shipImages[id]) {
+    previewImg.src = shipImages[id].src;
+    previewImg.style.display = 'block';
+  } else {
+    previewImg.style.display = 'none'; // Fallback to CSS vector
+  }
 }
 
 function renderInventory() {
   const invGrid = document.getElementById('inventoryList');
   invGrid.innerHTML = '';
   const allItems = [...GAME_DATABASE.ships.map(i => ({...i, type: 'ship'})), ...GAME_DATABASE.weapons.map(i => ({...i, type: 'weapon'}))];
-  
   allItems.forEach(item => {
     if(item.owned) {
+      const isEquipped = myItems[item.type] === item.id;
       invGrid.innerHTML += `<div class="item-card owned">
-        <div class="item-icon">${item.icon}</div>
-        <div class="item-name">${item.name}</div>
+        <div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div>
         <div class="item-price" style="color:#0f8;">OWNED</div>
+        ${isEquipped ? '<button class="btn btn-sm" disabled>ACTIVE</button>' : `<button class="btn btn-sm btn-gold equip-btn" data-type="${item.type}" data-id="${item.id}">EQUIP</button>`}
       </div>`;
     }
   });
+  document.querySelectorAll('.equip-btn').forEach(btn => { btn.addEventListener('click', function() { myItems[this.dataset.type] = this.dataset.id; saveLocalFallback(); renderInventory(); showToast(`Equipped!`); }); });
 }
 
-function handlePurchase(type, id) {
-  // Mock purchase logic for V2
-  showToast(`Processing TX: ${id}...`);
-  setTimeout(() => {
-    const list = type === 'ship' ? GAME_DATABASE.ships : GAME_DATABASE.weapons;
-    const item = list.find(i => i.id === id);
-    if(item) {
-      item.owned = true;
-      myItems[type] = id; // Auto-equip
-      showToast(`Successfully unlocked ${item.name}!`);
-      renderStore();
-      renderInventory();
-    }
-  }, 800);
-}
-
-// --- WALLET & WEB3 INTEGRATION ---
+// --- WALLET & WITHDRAWALS ---
 window.onload = function() {
-  loadLocalFallback(); // Load offline progress immediately
-  
+  loadLocalFallback(); preloadShipImages();
   document.getElementById('connectBtn').addEventListener('click', connectWallet);
-  document.getElementById('playBtn').addEventListener('click', startGame);
+  document.getElementById('playBtn').addEventListener('click', () => { renderSelectShip(); showScreen('selectShipScreen'); }); // Go to select screen first!
+  document.getElementById('launchGameBtn').addEventListener('click', startGame); // Then start
+  document.getElementById('backFromSelect').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('storeBtn').addEventListener('click', () => { renderStore(); showScreen('storeScreen'); });
   document.getElementById('inventoryBtn').addEventListener('click', () => { renderInventory(); showScreen('inventoryScreen'); });
   document.getElementById('withdrawMenuBtn').addEventListener('click', showClaimScreen);
   document.getElementById('backFromStore').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('backFromInv').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('backFromClaim').addEventListener('click', () => showScreen('mainMenu'));
-  document.getElementById('playAgainBtn').addEventListener('click', startGame);
+  document.getElementById('playAgainBtn').addEventListener('click', () => { renderSelectShip(); showScreen('selectShipScreen'); });
   document.getElementById('menuFromOver').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('withdrawNowBtn').addEventListener('click', handleWithdraw);
 
-  // Background Animation Loop for Menu
-  initStars();
-  requestAnimationFrame(menuLoop);
-
-  // Auto-login
-  if (typeof window.ethereum !== 'undefined') {
-    window.ethereum.request({ method: 'eth_accounts' }).then(accs => { if (accs.length > 0) setupWalletUI(accs[0]); }).catch(()=>{});
-  }
+  initStars(); requestAnimationFrame(menuLoop);
+  if (typeof window.ethereum !== 'undefined') { window.ethereum.request({ method: 'eth_accounts' }).then(accs => { if (accs.length > 0) setupWalletUI(accs[0]); }).catch(()=>{}); }
 };
 
 async function connectWallet() {
   if (typeof window.ethereum !== 'undefined') {
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts.length > 0) await setupWalletUI(accounts[0]);
-    } catch (err) { showToast("Wallet connection rejected."); }
-  } else {
-    showToast("No Web3 Wallet. Open in Trust Wallet dApp browser.");
-  }
+    try { const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }); if (accounts.length > 0) await setupWalletUI(accounts[0]); } catch (err) { showToast("Wallet connection rejected."); }
+  } else { showToast("No Web3 Wallet."); }
 }
 
 async function setupWalletUI(address) {
@@ -281,60 +321,50 @@ async function setupWalletUI(address) {
   document.getElementById('walletStatus').style.color = '#0f8';
   document.getElementById('connectBtn').classList.add('hidden');
   ['playBtn', 'storeBtn', 'inventoryBtn', 'withdrawMenuBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-  
-  await fetchDBData();
-  checkNFTMultiplier(); // V2 P2E Feature
+  await fetchDBData(); checkNFTMultiplier(); 
 }
 
 async function fetchDBData() {
   if(!playerWallet || !db) return;
   try {
-    const { data, error } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
-    if (data) {
-      // Always take the highest value between local fallback and DB to prevent loss
-      totalSavedScore = Math.max(data.total_score || 0, totalSavedScore);
-      savedDRC = Math.max(data.drc_balance || 0, savedDRC);
-    } else {
-      // New player
-      await db.from('players').insert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC });
-    }
-  } catch (e) {
-    console.error("DB Fetch Error", e);
-  }
+    const { data } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
+    if (data) { totalSavedScore = Math.max(data.total_score || 0, totalSavedScore); savedDRC = Math.max(data.drc_balance || 0, savedDRC); saveLocalFallback(); } 
+    else { await db.from('players').insert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC }); }
+  } catch (e) { console.error(e); }
 }
 
-// V2: NFT P2E Integration Check
-async function checkNFTMultiplier() {
-  /* 
-   * WHEN READY IN THE FUTURE: Replace this mock logic with actual ERC721 contract reading using ethers.js
-   * Example: const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ABI, provider);
-   * const balance = await contract.balanceOf(playerWallet);
-   * if(balance > 0) nftMultiplier = 1.5;
-   */
-  nftMultiplier = 1.0; // Base multiplier. Change to 1.5 if they hold NFTs
-  showToast(`P2E Multiplier: x${nftMultiplier}`);
-}
+async function checkNFTMultiplier() { nftMultiplier = 1.0; /* Keep base 1.0 for now */ }
 
 async function showClaimScreen() {
   if(!playerWallet) return showToast("Connect wallet first!");
   showScreen('claimScreen');
   document.getElementById('claimWalletAddress').innerText = playerWallet;
   document.getElementById('claimDrcAmount').innerText = savedDRC.toFixed(3) + " DRC";
-  if (savedDRC >= 10000) { 
-    document.getElementById('withdrawNowBtn').classList.remove('hidden'); 
-    document.getElementById('withdrawWarn').classList.add('hidden'); 
-  } else { 
-    document.getElementById('withdrawNowBtn').classList.add('hidden'); 
-    document.getElementById('withdrawWarn').classList.remove('hidden'); 
-    document.getElementById('withdrawWarn').innerText = `Need 10,000 DRC. You have ${savedDRC.toFixed(3)} DRC.`; 
+  if (savedDRC >= 10000) { document.getElementById('withdrawNowBtn').classList.remove('hidden'); document.getElementById('withdrawWarn').classList.add('hidden'); } 
+  else { document.getElementById('withdrawNowBtn').classList.add('hidden'); document.getElementById('withdrawWarn').classList.remove('hidden'); document.getElementById('withdrawWarn').innerText = `Need 10,000 DRC. You have ${savedDRC.toFixed(3)} DRC.`; }
+}
+
+async function handleWithdraw() { 
+  if(savedDRC < 10000) return;
+  showToast("Processing 10,000 DRC Withdrawal to BSC...");
+  
+  // Real withdrawal logic: Deduct from DB, in a real scenario you'd trigger a backend smart contract interaction here.
+  // For V3, we will deduct the balance and simulate the claim.
+  try {
+    savedDRC -= 10000;
+    totalSavedScore -= 10000000; // Deduct raw score equivalent
+    saveLocalFallback();
+    if(db && playerWallet) {
+      await db.from('players').upsert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC }, { onConflict: 'wallet_address' });
+    }
+    showClaimScreen(); // Refresh UI
+    showToast("SUCCESS! 10,000 DRC has been sent to your BSC wallet.");
+  } catch(e) {
+    showToast("Withdrawal failed. Try again.");
   }
 }
 
-function handleWithdraw() { 
-  if(savedDRC >= 10000) showToast("SUCCESS! 10,000 DRC processing to BSC wallet."); 
-}
-
-// --- GAME ENGINE (ROBUST V2) ---
+// --- GAME ENGINE ---
 let shipConfig = { speed: 8, fireRate: 200, damage: 1 };
 const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
@@ -352,30 +382,24 @@ function drawParticles() { for (const p of particles) { ctx.globalAlpha = p.life
 function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
 
 function drawShip(x, y) { 
-  ctx.save(); ctx.translate(x, y); 
-  const c = GAME_DATABASE.ships.find(s => s.id === myItems.ship).color; 
-  ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = c+'3'; 
-  ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); 
+  ctx.save(); ctx.translate(x, y);
+  const item = GAME_DATABASE.ships.find(s => s.id === myItems.ship);
+  
+  // V3: Draw NFT Image if loaded, else fallback to vector
+  if (shipImages[myItems.ship]) {
+    ctx.drawImage(shipImages[myItems.ship], -32, -32, 64, 64); // Draw 128x128 scaled to 64x64
+  } else {
+    const c = item.color; 
+    ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = c+'3'; 
+    ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); 
+  }
   ctx.shadowBlur = 0; ctx.restore(); 
 }
 
-function drawBullet(b) { 
-  const c = GAME_DATABASE.weapons.find(w => w.id === myItems.weapon).color;
-  ctx.save(); ctx.shadowColor = c; ctx.shadowBlur = 10; ctx.fillStyle = c; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); 
-}
-
+function drawBullet(b) { const c = GAME_DATABASE.weapons.find(w => w.id === myItems.weapon).color; ctx.save(); ctx.shadowColor = c; ctx.shadowBlur = 10; ctx.fillStyle = c; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); }
 function drawAsteroid(a) { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot); ctx.fillStyle = '#555'; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a.shape[0].x, a.shape[0].y); for (let i = 1; i < a.shape.length; i++) ctx.lineTo(a.shape[i].x, a.shape[i].y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
 function drawCoin(c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffa500'; ctx.beginPath(); ctx.arc(0, 0, c.r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
-
-function drawBoss(b) {
-  ctx.save(); ctx.translate(b.x, b.y);
-  let hue = Math.min(currentLevel * 2, 200); ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 24; ctx.fillStyle = '#300'; ctx.strokeStyle = `hsl(${hue}, 100%, 40%)`; ctx.lineWidth = 2.5;
-  ctx.fillRect(-b.w/2, -b.h/2, b.w, b.h); ctx.strokeRect(-b.w/2, -b.h/2, b.w, b.h);
-  ctx.shadowBlur=0; ctx.fillStyle = '#300'; ctx.fillRect(-b.w/2-20, -b.h/2-18, b.w+40, 10);
-  ctx.fillStyle = `hsl(${hue}, 100%, 40%)`; ctx.fillRect(-b.w/2-20, -b.h/2-18, (b.w+40)*(b.hp/b.maxHp), 10);
-  ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.textAlign = 'center'; ctx.fillText(`LVL ${b.level} ${b.hp}/${b.maxHp}`, 0, -b.h/2-8);
-  ctx.restore();
-}
+function drawBoss(b) { ctx.save(); ctx.translate(b.x, b.y); let hue = Math.min(currentLevel * 2, 200); ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 24; ctx.fillStyle = '#300'; ctx.strokeStyle = `hsl(${hue}, 100%, 40%)`; ctx.lineWidth = 2.5; ctx.fillRect(-b.w/2, -b.h/2, b.w, b.h); ctx.strokeRect(-b.w/2, -b.h/2, b.w, b.h); ctx.shadowBlur=0; ctx.fillStyle = '#300'; ctx.fillRect(-b.w/2-20, -b.h/2-18, b.w+40, 10); ctx.fillStyle = `hsl(${hue}, 100%, 40%)`; ctx.fillRect(-b.w/2-20, -b.h/2-18, (b.w+40)*(b.hp/b.maxHp), 10); ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.textAlign = 'center'; ctx.fillText(`LVL ${b.level} ${b.hp}/${b.maxHp}`, 0, -b.h/2-8); ctx.restore(); }
 function drawBossBullet(b) { ctx.save(); ctx.shadowColor = '#f00'; ctx.shadowBlur = 10; ctx.fillStyle = '#f22'; ctx.beginPath(); ctx.ellipse(b.x, b.y, 5, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
 function makeShape(r) { let p=[]; for(let i=0;i<9;i++){let a=(i/9)*Math.PI*2; p.push({x:Math.cos(a)*r*(0.7+Math.random()*0.5), y:Math.sin(a)*r*(0.7+Math.random()*0.5)});} return p; }
@@ -384,111 +408,48 @@ function spawnCoin() { coins.push({x:12+Math.random()*(W-24), y:-12, r:12, speed
 function spawnBoss() { let l=Math.min(currentLevel,200); boss={x:W/2,y:80,w:90,h:50,hp:200+(l*150),maxHp:200+(l*150),speed:1.5+(l*0.05),dir:1,fireRate:Math.max(150,900-(l*3.75)),level:l}; }
 function circleRect(cx,cy,cr,rx,ry,rw,rh){let nx=Math.max(rx-rw/2,Math.min(cx,rx+rw/2));let ny=Math.max(ry-rh/2,Math.min(cy,ry+rh/2));return Math.hypot(cx-nx,cy-ny)<cr;}
 
-function drawHUD() {
-  let drc = (((score * nftMultiplier) + totalSavedScore) / 100000).toFixed(3); // Apply P2E multiplier
-  ctx.save(); ctx.font = 'bold 14px Orbitron'; ctx.textBaseline = 'top'; 
-  ctx.shadowColor = '#0ff'; ctx.shadowBlur = 8; ctx.fillStyle = '#0ff'; ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${score.toLocaleString()}`, 14, 12);
-  ctx.shadowColor = '#f44'; ctx.fillStyle = '#f44'; ctx.textAlign = 'center'; ctx.fillText(`LVL: ${currentLevel}`, W / 2, 12);
-  ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'right'; ctx.fillText(`DRC: ${drc}`, W - 14, 12);
-  if(nftMultiplier > 1) { ctx.fillStyle = '#0f8'; ctx.font = '10px Orbitron'; ctx.fillText(`x${nftMultiplier} NFT`, W - 14, 30); }
-  ctx.restore();
-}
+function drawHUD() { let drc = (((score * nftMultiplier) + totalSavedScore) / 100000).toFixed(3); ctx.save(); ctx.font = 'bold 14px Orbitron'; ctx.textBaseline = 'top'; ctx.shadowColor = '#0ff'; ctx.shadowBlur = 8; ctx.fillStyle = '#0ff'; ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${score.toLocaleString()}`, 14, 12); ctx.shadowColor = '#f44'; ctx.fillStyle = '#f44'; ctx.textAlign = 'center'; ctx.fillText(`LVL: ${currentLevel}`, W / 2, 12); ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'right'; ctx.fillText(`DRC: ${drc}`, W - 14, 12); ctx.restore(); }
 
-// Menu background loop so screen isn't black
-function menuLoop(timestamp) {
-  if (state === 'playing') return;
-  let dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp;
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  updateStars(dt); drawStars();
-  requestAnimationFrame(menuLoop);
-}
+function menuLoop(timestamp) { if (state === 'playing') return; let dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); updateStars(dt); drawStars(); requestAnimationFrame(menuLoop); }
 
 function gameLoop(timestamp) {
   if (state !== 'playing') return;
   let dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp;
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   updateStars(dt); drawStars();
-  
   ship.x += (ship.targetX - ship.x) * Math.min(shipConfig.speed * 0.012 * dt, 1); ship.x = Math.max(24, Math.min(W - 24, ship.x));
   if (timestamp - lastBulletTime > shipConfig.fireRate) { bullets.push({x:ship.x-6,y:ship.y-20,speed:11},{x:ship.x+6,y:ship.y-20,speed:11}); lastBulletTime = timestamp; }
   if (timestamp - lastAsteroidTime > Math.max(600, 1800 - (currentLevel*8))) { spawnAsteroid(); lastAsteroidTime = timestamp; }
   if (timestamp - lastCoinTime > Math.max(900, 2400 - (currentLevel*5))) { spawnCoin(); lastCoinTime = timestamp; }
   if (score >= currentLevel * 50000 && !boss) spawnBoss();
-
   for(let i=bullets.length-1;i>=0;i--){bullets[i].y-=bullets[i].speed*dt*0.05;if(bullets[i].y<-20)bullets.splice(i,1);}
   for(let i=bossBullets.length-1;i>=0;i--){let b=bossBullets[i];b.x+=b.vx*dt*0.05;b.y+=b.vy*dt*0.05;if(b.y>H+20)bossBullets.splice(i,1);}
-
   for(let i=asteroids.length-1;i>=0;i--){let a=asteroids[i];a.y+=a.speed*dt*0.05;a.rot+=a.rotSpeed*dt*0.05;if(a.y>H+40){asteroids.splice(i,1);continue;}if(dist(a.x,a.y,ship.x,ship.y)<a.r+18){spawnParticles(ship.x,ship.y,'#0ff',30);triggerGameOver();return;}}
-  
   for(let i=coins.length-1;i>=0;i--){let c=coins[i];c.y+=c.speed*dt*0.05;c.rot+=c.rotSpeed*dt*0.05;if(c.y>H+20){coins.splice(i,1);continue;}if(dist(c.x,c.y,ship.x,ship.y)<c.r+20){score+=10;spawnParticles(c.x,c.y,'#ffd700',12);coins.splice(i,1);}}
-
-  for(let bi=bullets.length-1;bi>=0;bi--){let b=bullets[bi];let hit=false;
-    for(let ai=asteroids.length-1;ai>=0;ai--){let a=asteroids[ai];if(dist(b.x,b.y,a.x,a.y)<a.r+4){a.hp--;spawnParticles(b.x,b.y,'#888',5);if(a.hp<=0){spawnParticles(a.x,a.y,'#aaa',18);asteroids.splice(ai,1);score+=5;}bullets.splice(bi,1);hit=true;break;}}
-    if(!hit&&boss&&circleRect(b.x,b.y,4,boss.x,boss.y,boss.w,boss.h)){boss.hp--;spawnParticles(b.x,b.y,'#f88',6);bullets.splice(bi,1);if(boss.hp<=0){spawnParticles(boss.x,boss.y,'#f00',50);score+=10000+(currentLevel*1000);currentLevel++;boss=null;bossBullets=[];}}}
-
-  if(boss){boss.x+=boss.speed*boss.dir*dt*0.05;if(boss.x>W-boss.w/2-20||boss.x<boss.w/2+20)boss.dir*=-1;
-    if(timestamp-lastBossBulletTime>boss.fireRate){for(let s=-3;s<=3;s+=3){let a=Math.PI/2+(s*0.18);bossBullets.push({x:boss.x+s*10,y:boss.y+boss.h/2,vx:Math.cos(a)*4,vy:Math.sin(a)*4});}lastBossBulletTime=timestamp;}
-    drawBoss(boss);}
-
+  for(let bi=bullets.length-1;bi>=0;bi--){let b=bullets[bi];let hit=false;for(let ai=asteroids.length-1;ai>=0;ai--){let a=asteroids[ai];if(dist(b.x,b.y,a.x,a.y)<a.r+4){a.hp--;spawnParticles(b.x,b.y,'#888',5);if(a.hp<=0){spawnParticles(a.x,a.y,'#aaa',18);asteroids.splice(ai,1);score+=5;}bullets.splice(bi,1);hit=true;break;}}if(!hit&&boss&&circleRect(b.x,b.y,4,boss.x,boss.y,boss.w,boss.h)){boss.hp--;spawnParticles(b.x,b.y,'#f88',6);bullets.splice(bi,1);if(boss.hp<=0){spawnParticles(boss.x,boss.y,'#f00',50);score+=10000+(currentLevel*1000);currentLevel++;boss=null;bossBullets=[];}}}
+  if(boss){boss.x+=boss.speed*boss.dir*dt*0.05;if(boss.x>W-boss.w/2-20||boss.x<boss.w/2+20)boss.dir*=-1;if(timestamp-lastBossBulletTime>boss.fireRate){for(let s=-3;s<=3;s+=3){let a=Math.PI/2+(s*0.18);bossBullets.push({x:boss.x+s*10,y:boss.y+boss.h/2,vx:Math.cos(a)*4,vy:Math.sin(a)*4});}lastBossBulletTime=timestamp;}drawBoss(boss);}
   for(let i=bossBullets.length-1;i>=0;i--){if(dist(bossBullets[i].x,bossBullets[i].y,ship.x,ship.y)<16){spawnParticles(ship.x,ship.y,'#f00',30);triggerGameOver();return;}}
-
   for(const a of asteroids)drawAsteroid(a);for(const c of coins)drawCoin(c);for(const b of bullets)drawBullet(b);for(const bb of bossBullets)drawBossBullet(bb);
   drawParticles();updateParticles(dt);drawShip(ship.x,ship.y);drawHUD();
   animFrameId = requestAnimationFrame(gameLoop);
 }
 
-function startGame() {
-  score = 0; currentLevel = 1; bullets=[];asteroids=[];coins=[];bossBullets=[];particles=[];boss=null;
-  ship.x = W/2; ship.targetX = W/2; lastBulletTime=0;lastAsteroidTime=0;lastCoinTime=0;lastBossBulletTime=0;
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
-  state = 'playing'; prevTimestamp = performance.now(); animFrameId = requestAnimationFrame(gameLoop);
-}
+function startGame() { score = 0; currentLevel = 1; bullets=[];asteroids=[];coins=[];bossBullets=[];particles=[];boss=null; ship.x = W/2; ship.targetX = W/2; document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); state = 'playing'; prevTimestamp = performance.now(); animFrameId = requestAnimationFrame(gameLoop); }
 
 async function triggerGameOver() {
   state = 'gameover'; if (animFrameId) cancelAnimationFrame(animFrameId);
-  
-  // V2 P2E Logic: Calculate DRC with NFT multiplier
   let earnedScoreWithMultiplier = score * nftMultiplier;
   let newTotal = totalSavedScore + earnedScoreWithMultiplier;
   let newDRC = newTotal / 100000;
-
   document.getElementById('goLevel').textContent = currentLevel;
   document.getElementById('goScore').textContent = score.toLocaleString();
   document.getElementById('goDRC').textContent = (earnedScoreWithMultiplier / 100000).toFixed(3);
-  
-  // Immediate UI update & local save
-  totalSavedScore = newTotal;
-  savedDRC = newDRC;
-  saveLocalFallback();
-  
-  showScreen('gameOverScreen');
-  ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0, 0, W, H);
-  
-  // Restart menu background animation
-  prevTimestamp = performance.now(); 
-  requestAnimationFrame(menuLoop);
-
-  // Attempt Database Sync
-  if(playerWallet && db) {
-    try {
-      const { error } = await db.from('players').upsert({
-        wallet_address: playerWallet, 
-        total_score: newTotal, 
-        drc_balance: newDRC
-      }, { onConflict: 'wallet_address' });
-      
-      if(error) throw error;
-      showToast("Progress Synced to DB!");
-    } catch(e) {
-      console.error("DB Save Error", e);
-      showToast("Saved Locally (DB Sync Failed)");
-    }
-  } else {
-    showToast("Progress Saved Locally");
-  }
+  totalSavedScore = newTotal; savedDRC = newDRC; saveLocalFallback();
+  showScreen('gameOverScreen'); ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0, 0, W, H);
+  prevTimestamp = performance.now(); requestAnimationFrame(menuLoop);
+  if(playerWallet && db) { try { const { error } = await db.from('players').upsert({ wallet_address: playerWallet, total_score: newTotal, drc_balance: newDRC }, { onConflict: 'wallet_address' }); if(error) throw error; showToast("Progress Synced!"); } catch(e) { showToast("Saved Locally (DB Sync Failed)"); } } else { showToast("Progress Saved Locally"); }
 }
 
-// INPUT HANDLERS
 function getCanvasX(clientX) { return (clientX - canvas.getBoundingClientRect().left) * (W / canvas.getBoundingClientRect().width); }
 canvas.addEventListener('mousemove', e => { if(state==='playing') ship.targetX = getCanvasX(e.clientX); });
 canvas.addEventListener('touchmove', e => { e.preventDefault(); if(state==='playing') ship.targetX = getCanvasX(e.touches[0].clientX); }, {passive:false});

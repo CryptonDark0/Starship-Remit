@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Starship Remit - Web3 P2E V3</title>
+<title>Starship Remit - Web3 P2E V5</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="application/javascript"></script>
 <style>
@@ -30,8 +30,9 @@
 
   .store-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #0ff3; padding-bottom: 5px;}
   .item-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 15px; }
-  .item-card { background: #111; border: 1px solid #333; padding: 8px; text-align: center; border-radius: 4px; }
+  .item-card { background: #111; border: 1px solid #333; padding: 8px; text-align: center; border-radius: 4px; cursor: pointer; }
   .item-card.owned { border-color: #0f8; box-shadow: 0 0 8px #0f82; }
+  .item-card.selected { border-color: #0ff; box-shadow: 0 0 12px #0ff; background: #002; }
   .item-icon { font-size: 1.5rem; margin-bottom: 4px; pointer-events: none; }
   .item-name { font-size: 0.55rem; color: #aaa; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
   .item-price { font-size: 0.55rem; color: #ffd700; margin-bottom: 6px; pointer-events: none; }
@@ -41,12 +42,13 @@
   
   .claim-box { border: 1px solid #0ff3; background: #050510; padding: 20px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; }
   .drc-amount { font-size: 2.5rem; color: #ffd700; text-shadow: 0 0 20px #ffd700; margin: 15px 0; font-weight: 900; }
-  
   .element-banner { background: linear-gradient(135deg, #2EB5FF 0%, #1A7FD4 100%); padding: 12px; width: 90%; max-width: 350px; border-radius: 8px; text-align: center; cursor: pointer; text-decoration: none; color: white; font-weight: bold; font-family: 'Orbitron'; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
   
-  /* Skin Preview */
-  .skin-preview-box { width: 100px; height: 100px; border: 2px solid #0ff; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; background: #001; }
-  .skin-preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .batch-card { border: 2px solid #ffd700; background: linear-gradient(135deg, #111 0%, #1a1a00 100%); padding: 20px; text-align: center; border-radius: 8px; width: 100%; max-width: 300px; margin-top: 10px; box-shadow: 0 0 15px #ffd7003; }
+
+  .loadout-preview { display: flex; gap: 20px; margin: 15px 0; align-items: center; justify-content: center; background: #001; padding: 15px; border: 1px solid #0ff3; border-radius: 8px; width: 100%; max-width: 300px; }
+  .preview-box { width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; border: 1px dashed #0ff3; background: #000; }
+  .preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
   #toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #0ff; color: #0ff; padding: 10px 20px; border-radius: 4px; font-family: 'Share Tech Mono'; font-size: 0.8rem; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
   #toast.show { opacity: 1; }
@@ -62,8 +64,8 @@
     <!-- MAIN MENU -->
     <div class="screen" id="mainMenu">
       <div class="game-title">STARSHIP<br>REMIT</div>
-      <div class="sub-text">// V3 NFT SKINS & P2E //</div>
-      <div class="wallet-status" id="walletStatus">⚠ Connect Wallet to Save Progress</div>
+      <div class="sub-text">// V5 NFT BATCH MINT //</div>
+      <div class="wallet-status" id="walletStatus">⚠ Connect Wallet to Play & Save</div>
       <button class="btn btn-red" id="connectBtn">🔓 CONNECT WALLET</button>
       <div class="menu-grid">
         <button class="btn hidden" id="playBtn">▶ PLAY GAME</button>
@@ -73,29 +75,42 @@
       </div>
     </div>
 
-    <!-- PRE-GAME SKIN SELECTION -->
+    <!-- PRE-GAME LOADOUT SELECTION -->
     <div class="screen hidden" id="selectShipScreen">
-      <div class="store-header"><span style="color:#0ff; font-size:1rem;">🚀 SELECT SHIP</span><button class="btn btn-sm" id="backFromSelect">← BACK</button></div>
-      <div class="skin-preview-box" id="shipPreviewBox"><img id="shipPreviewImg" src="" alt="Ship"/></div>
-      <div class="sub-text" id="selectedShipName">STANDARD</div>
+      <div class="store-header"><span style="color:#0ff; font-size:1rem;">🚀 SELECT LOADOUT</span><button class="btn btn-sm" id="backFromSelect">← BACK</button></div>
+      <div class="loadout-preview">
+        <div style="text-align:center"><div class="sub-text">SHIP</div><div class="preview-box" id="shipPreviewBox"></div><div class="sub-text" id="selectedShipName" style="color:#0ff">STANDARD</div></div>
+        <div style="text-align:center"><div class="sub-text">WEAPON</div><div class="preview-box" id="weaponPreviewBox"></div><div class="sub-text" id="selectedWeapName" style="color:#0f0">LASER</div></div>
+      </div>
+      <div class="sub-text">SELECT SHIP SKIN</div>
       <div class="item-grid" id="selectShipGrid"></div>
-      <button class="btn btn-gold" id="launchGameBtn" style="margin-top: 15px;">🚀 LAUNCH GAME</button>
+      <div class="sub-text">SELECT WEAPON SKIN</div>
+      <div class="item-grid" id="selectWeapGrid"></div>
+      <button class="btn btn-gold" id="launchGameBtn" style="margin-top: 15px;">🚀 LAUNCH MISSION</button>
     </div>
 
     <!-- STORE -->
     <div class="screen hidden" id="storeScreen">
       <div class="store-header"><span style="color:#0ff; font-size:1rem;">🛒 MARKETPLACE</span><button class="btn btn-sm" id="backFromStore">← BACK</button></div>
-      <div class="sub-text">STARSHIPS (NFT SKINS)</div>
+      
+      <div class="sub-text" style="margin-top: 10px; color:#ffd700;">🔥 STARTER PACK (SAVE GAS) 🔥</div>
+      <div class="batch-card">
+        <div class="item-icon" style="font-size: 2rem;">📦</div>
+        <div class="item-name" style="color: #fff; font-size: 0.8rem;">SHIP + WEAPON BUNDLE</div>
+        <div class="item-price" style="font-size: 0.8rem; margin: 10px 0;">0.03 BNB</div>
+        <button class="btn btn-gold" onclick="mintBatchPack()">MINT BATCH PACK</button>
+      </div>
+
+      <div class="sub-text" style="margin-top: 20px;">INDIVIDUAL ITEMS</div>
       <div class="item-grid" id="storeShips"></div>
-      <div class="sub-text">WEAPONS</div>
       <div class="item-grid" id="storeWeapons"></div>
     </div>
 
     <!-- INVENTORY -->
     <div class="screen hidden" id="inventoryScreen">
-      <div class="store-header"><span style="color:#0ff; font-size:1rem;">💼 MY NFTS & ASSETS</span><button class="btn btn-sm" id="backFromInv">← BACK</button></div>
+      <div class="store-header"><span style="color:#0ff; font-size:1rem;">💼 MY NFTS</span><button class="btn btn-sm" id="backFromInv">← BACK</button></div>
       <div id="inventoryList" class="item-grid" style="margin-top:20px;"></div>
-      <div class="sub-text" style="margin-top:20px; color:#fff;">BUY & TRADE NFTS ON ELEMENT</div>
+      <div class="sub-text" style="margin-top:20px; color:#fff;">TRADE NFTS ON ELEMENT</div>
       <a href="https://element.market/account/0x1332c3296aa604985110b3a375937e1ae12433a8" target="_blank" class="element-banner"><span>💎</span> View Collection</a>
     </div>
 
@@ -106,7 +121,7 @@
         <div class="sub-text">AVAILABLE BALANCE</div>
         <div class="drc-amount" id="claimDrcAmount">0.000 DRC</div>
         <div class="wallet-status" id="claimWalletAddress" style="color:#0ff; word-break:break-all; font-size:0.6rem; margin-top:5px;">0x000...000</div>
-        <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;">WITHDRAW 10k DRC TO BSC</button>
+        <button class="btn btn-gold hidden" id="withdrawNowBtn" style="margin-top:20px;">WITHDRAW TO BSC</button>
         <div class="sub-text hidden" id="withdrawWarn" style="color:#f88; font-size:0.6rem; margin-top:10px;">Need 10,000 DRC to withdraw.</div>
       </div>
     </div>
@@ -124,20 +139,22 @@
 </div>
 
 <script>
-// --- V3 ARCHITECTURE: NFT IMAGE SKINS & REAL BNB PURCHASES ---
-const DEV_WALLET = "YOUR_BNB_WALLET_ADDRESS"; // REPLACE THIS WITH YOUR REAL WALLET ADDRESS!
+// ==========================================
+// CONFIGURATION & GITHUB IMAGE LINKS
+// ==========================================
+const DEV_WALLET = "0x1332c3296aa604985110b3a375937e1ae12433a8"; // Your BNB receiving wallet
+const NFT_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; // REPLACE when you deploy to Element
 
 const GAME_DATABASE = {
   ships: [
-    // imageSrc: Put your 128x128 transparent PNGs in an 'assets' folder
-    { id: 'standard', name: 'Standard', icon: '🚀', imageSrc: null, price: 0, curr: 'FREE', color: '#0af', owned: true },
-    { id: 'neon', name: 'Neon Viper', icon: '✈️', imageSrc: 'assets/neon.png', price: 0.01, curr: 'BNB', color: '#f0f', owned: false },
-    { id: 'void', name: 'Void Cruiser', icon: '🛸', imageSrc: 'assets/void.png', price: 0.05, curr: 'BNB', color: '#808', owned: false },
-    { id: 'galaxy', name: 'Galaxy', icon: '🌀', imageSrc: 'assets/galaxy.png', price: 0.1, curr: 'BNB', color: '#48f', owned: false }
+    // MAKE SURE THESE FILENAMES MATCH YOUR GITHUB REPO EXACTLY (case-sensitive!)
+    { id: 'standard', name: 'Standard', icon: '🚀', imageSrc: 'assets/ships/standard.png', price: 0, curr: 'FREE', color: '#0af', owned: true },
+    { id: 'neon', name: 'Neon Viper', icon: '✈️', imageSrc: 'assets/ships/neon.png', price: 0.01, curr: 'BNB', color: '#f0f', owned: false },
+    { id: 'void', name: 'Void Cruiser', icon: '🛸', imageSrc: 'assets/ships/void.png', price: 0.05, curr: 'BNB', color: '#808', owned: false }
   ],
   weapons: [
-    { id: 'laser', name: 'Laser', icon: '💚', price: 0, curr: 'FREE', color: '#0f0', owned: true },
-    { id: 'plasma', name: 'Plasma', icon: '🔥', price: 0.02, curr: 'BNB', color: '#f80', owned: false }
+    { id: 'laser', name: 'Laser', icon: '💚', imageSrc: 'assets/weapons/greenyellowbullet128.png', price: 0, curr: 'FREE', color: '#0f0', owned: true },
+    { id: 'plasma', name: 'Plasma', icon: '🔵', imageSrc: 'assets/weapons/bluebullet128.png', price: 0.02, curr: 'BNB', color: '#08f', owned: false }
   ]
 };
 
@@ -147,15 +164,15 @@ let savedDRC = 0;
 let myItems = { ship: 'standard', weapon: 'laser' }; 
 let nftMultiplier = 1.0; 
 
-// Image Loader for Skins
+// Image Loaders for 128px PNGs
 const shipImages = {};
-function preloadShipImages() {
-  GAME_DATABASE.ships.forEach(ship => {
-    if (ship.imageSrc) {
-      const img = new Image();
-      img.src = ship.imageSrc;
-      img.onload = () => { shipImages[ship.id] = img; };
-    }
+const weaponImages = {};
+function preloadImages() {
+  GAME_DATABASE.ships.forEach(item => {
+    if (item.imageSrc) { const img = new Image(); img.src = item.imageSrc; img.onload = () => { shipImages[item.id] = img; }; }
+  });
+  GAME_DATABASE.weapons.forEach(item => {
+    if (item.imageSrc) { const img = new Image(); img.src = item.imageSrc; img.onload = () => { weaponImages[item.id] = img; }; }
   });
 }
 
@@ -165,8 +182,7 @@ try { db = supabase.createClient('https://ypcmbsunwrvkmaairuaj.supabase.co', 'sb
 function loadLocalFallback() {
   totalSavedScore = parseInt(localStorage.getItem('sr_score') || '0');
   savedDRC = parseFloat(localStorage.getItem('sr_drc') || '0');
-  const savedItems = localStorage.getItem('sr_items');
-  if (savedItems) myItems = JSON.parse(savedItems);
+  const savedItems = localStorage.getItem('sr_items'); if (savedItems) myItems = JSON.parse(savedItems);
   const savedOwned = localStorage.getItem('sr_owned');
   if (savedOwned) {
     const ownedIds = JSON.parse(savedOwned);
@@ -174,10 +190,8 @@ function loadLocalFallback() {
     GAME_DATABASE.weapons.forEach(w => { if(ownedIds.includes(w.id)) w.owned = true; });
   }
 }
-
 function saveLocalFallback() {
-  localStorage.setItem('sr_score', totalSavedScore);
-  localStorage.setItem('sr_drc', savedDRC);
+  localStorage.setItem('sr_score', totalSavedScore); localStorage.setItem('sr_drc', savedDRC);
   localStorage.setItem('sr_items', JSON.stringify(myItems));
   const ownedIds = [...GAME_DATABASE.ships.filter(s => s.owned).map(s => s.id), ...GAME_DATABASE.weapons.filter(w => w.owned).map(w => w.id)];
   localStorage.setItem('sr_owned', JSON.stringify(ownedIds));
@@ -186,10 +200,62 @@ function saveLocalFallback() {
 function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 
-// --- STORE & REAL BNB PURCHASES ---
+// ==========================================
+// WEB3: BATCH MINT & NFT VERIFICATION
+// ==========================================
+const BATCH_MINT_ABI = ["function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) payable"];
+const CHECK_BALANCE_ABI = ["function balanceOf(address owner) view returns (uint256)"];
+
+async function mintBatchPack() {
+  if (!playerWallet) return showToast("Connect wallet first!");
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, BATCH_MINT_ABI, signer);
+
+    // IMPORTANT: Change these IDs to match your smart contract Token IDs on Element!
+    const ids = [1, 2]; 
+    const amounts = [1, 1]; 
+    const totalPrice = ethers.utils.parseEther("0.03"); 
+
+    showToast("Opening Wallet... Confirm Batch Mint TX!");
+    const tx = await nftContract.mintBatch(playerWallet, ids, amounts, "0x0", { value: totalPrice });
+    
+    showToast("Minting Pack... Processing on BSC...");
+    await tx.wait(); 
+    
+    let shipItem = GAME_DATABASE.ships.find(s => s.id === 'neon');
+    let weapItem = GAME_DATABASE.weapons.find(w => w.id === 'plasma');
+    if(shipItem) shipItem.owned = true;
+    if(weapItem) weapItem.owned = true;
+    
+    saveLocalFallback();
+    showToast("🎉 Batch Mint Success! NFTs Unlocked!");
+    renderStore(); 
+  } catch (error) {
+    console.error("Mint Error:", error);
+    showToast("Minting Failed or Rejected.");
+  }
+}
+
+async function checkNFTOwnership() {
+  if (!window.ethereum || !playerWallet || NFT_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") return;
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, CHECK_BALANCE_ABI, provider);
+    const balance = await nftContract.balanceOf(playerWallet);
+    if (balance.toNumber() > 0) {
+      nftMultiplier = 1.5; 
+      showToast("🌟 NFT Detected! x1.5 DRC Multiplier Active!");
+    } else { nftMultiplier = 1.0; }
+  } catch(e) { console.error(e); }
+}
+
+// ==========================================
+// UI RENDERING & STORE LOGIC
+// ==========================================
 function renderStore() {
-  const shipGrid = document.getElementById('storeShips');
-  const weapGrid = document.getElementById('storeWeapons');
+  const shipGrid = document.getElementById('storeShips'); const weapGrid = document.getElementById('storeWeapons');
   shipGrid.innerHTML = ''; weapGrid.innerHTML = '';
   GAME_DATABASE.ships.forEach(item => { shipGrid.innerHTML += createItemCard(item, 'ship'); });
   GAME_DATABASE.weapons.forEach(item => { weapGrid.innerHTML += createItemCard(item, 'weapon'); });
@@ -201,99 +267,80 @@ function createItemCard(item, type) {
   const priceText = item.price === 0 ? '<span style="color:#0f8;">FREE</span>' : `${item.price} ${item.curr}`;
   const btnText = item.owned ? 'OWNED' : 'BUY';
   const disabledAttr = item.owned ? 'disabled' : '';
-  return `<div class="item-card ${ownedClass}">
-    <div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div><div class="item-price">${priceText}</div>
-    <button class="btn btn-sm btn-gold buy-btn" data-type="${type}" data-id="${item.id}" ${disabledAttr}>${btnText}</button>
-  </div>`;
+  return `<div class="item-card ${ownedClass}"><div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div><div class="item-price">${priceText}</div><button class="btn btn-sm btn-gold buy-btn" data-type="${type}" data-id="${item.id}" ${disabledAttr}>${btnText}</button></div>`;
 }
 
 async function handlePurchase(type, id) {
   const list = type === 'ship' ? GAME_DATABASE.ships : GAME_DATABASE.weapons;
   const item = list.find(i => i.id === id);
   if (!item || item.owned) return;
-
   if (item.curr === 'BNB') {
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      const provider = new ethers.providers.Web3Provider(window.ethereum); const signer = provider.getSigner();
       showToast("Confirming TX in Wallet...");
       const tx = await signer.sendTransaction({ to: DEV_WALLET, value: ethers.utils.parseEther(item.price.toString()) });
-      showToast("Processing TX...");
-      await tx.wait();
-      item.owned = true;
-      myItems[type] = id;
-      saveLocalFallback();
-      showToast(`Unlocked ${item.name}! TX Success!`);
-      renderStore();
-    } catch (err) { console.error(err); showToast("TX Failed or Rejected"); }
-  } else {
-    // Mock DRC/Free logic
-    item.owned = true; myItems[type] = id; saveLocalFallback(); showToast(`Unlocked ${item.name}!`); renderStore();
-  }
+      showToast("Processing TX..."); await tx.wait();
+      item.owned = true; myItems[type] = id; saveLocalFallback(); showToast(`Unlocked ${item.name}!`); renderStore();
+    } catch (err) { showToast("TX Failed or Rejected"); }
+  } else { item.owned = true; myItems[type] = id; saveLocalFallback(); showToast(`Unlocked ${item.name}!`); renderStore(); }
 }
 
-// --- PRE-GAME SKIN SELECTION ---
-function renderSelectShip() {
-  const grid = document.getElementById('selectShipGrid');
-  grid.innerHTML = '';
+// ==========================================
+// LOADOUT SELECTION LOGIC 
+// ==========================================
+function renderLoadout() {
+  const shipGrid = document.getElementById('selectShipGrid'); const weapGrid = document.getElementById('selectWeapGrid');
+  shipGrid.innerHTML = ''; weapGrid.innerHTML = '';
+  
   GAME_DATABASE.ships.forEach(item => {
-    if (item.owned) {
-      const isEquipped = myItems.ship === item.id;
-      grid.innerHTML += `<div class="item-card owned" style="cursor:pointer;" id="select-${item.id}">
-        <div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div>
-      </div>`;
-    }
+    if(item.owned) { shipGrid.innerHTML += `<div class="item-card owned ${myItems.ship === item.id ? 'selected' : ''}" data-type="ship" data-id="${item.id}"><div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div></div>`; }
   });
-  updateShipPreview(myItems.ship);
+  GAME_DATABASE.weapons.forEach(item => {
+    if(item.owned) { weapGrid.innerHTML += `<div class="item-card owned ${myItems.weapon === item.id ? 'selected' : ''}" data-type="weapon" data-id="${item.id}"><div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div></div>`; }
+  });
 
-  // Attach click listeners
-  grid.querySelectorAll('.item-card').forEach(card => {
+  updateLoadoutPreview();
+
+  document.querySelectorAll('#selectShipGrid .item-card, #selectWeapGrid .item-card').forEach(card => {
     card.addEventListener('click', function() {
-      const id = this.id.replace('select-', '');
-      myItems.ship = id;
+      myItems[this.dataset.type] = this.dataset.id;
       saveLocalFallback();
-      updateShipPreview(id);
+      renderLoadout(); 
     });
   });
 }
 
-function updateShipPreview(id) {
-  const item = GAME_DATABASE.ships.find(s => s.id === id);
-  const previewImg = document.getElementById('shipPreviewImg');
-  const previewName = document.getElementById('selectedShipName');
-  previewName.innerText = item.name.toUpperCase();
+function updateLoadoutPreview() {
+  const shipItem = GAME_DATABASE.ships.find(s => s.id === myItems.ship);
+  const weapItem = GAME_DATABASE.weapons.find(w => w.id === myItems.weapon);
   
-  if (shipImages[id]) {
-    previewImg.src = shipImages[id].src;
-    previewImg.style.display = 'block';
-  } else {
-    previewImg.style.display = 'none'; // Fallback to CSS vector
-  }
+  const shipBox = document.getElementById('shipPreviewBox'); const weapBox = document.getElementById('weaponPreviewBox');
+  document.getElementById('selectedShipName').innerText = shipItem.name.toUpperCase();
+  document.getElementById('selectedWeapName').innerText = weapItem.name.toUpperCase();
+
+  if (shipImages[myItems.ship]) { shipBox.innerHTML = `<img src="${shipImages[myItems.ship].src}" alt="Ship"/>`; } 
+  else { shipBox.innerHTML = `<div style="color:${shipItem.color}; font-size:30px;">▲</div>`; }
+
+  if (weaponImages[myItems.weapon]) { weapBox.innerHTML = `<img src="${weaponImages[myItems.weapon].src}" alt="Weapon"/>`; } 
+  else { weapBox.innerHTML = `<div style="color:${weapItem.color}; font-size:30px;">█</div>`; }
 }
 
 function renderInventory() {
-  const invGrid = document.getElementById('inventoryList');
-  invGrid.innerHTML = '';
+  const invGrid = document.getElementById('inventoryList'); invGrid.innerHTML = '';
   const allItems = [...GAME_DATABASE.ships.map(i => ({...i, type: 'ship'})), ...GAME_DATABASE.weapons.map(i => ({...i, type: 'weapon'}))];
   allItems.forEach(item => {
-    if(item.owned) {
-      const isEquipped = myItems[item.type] === item.id;
-      invGrid.innerHTML += `<div class="item-card owned">
-        <div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div>
-        <div class="item-price" style="color:#0f8;">OWNED</div>
-        ${isEquipped ? '<button class="btn btn-sm" disabled>ACTIVE</button>' : `<button class="btn btn-sm btn-gold equip-btn" data-type="${item.type}" data-id="${item.id}">EQUIP</button>`}
-      </div>`;
-    }
+    if(item.owned) { invGrid.innerHTML += `<div class="item-card owned"><div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div><div class="item-price" style="color:#0f8;">OWNED</div></div>`; }
   });
-  document.querySelectorAll('.equip-btn').forEach(btn => { btn.addEventListener('click', function() { myItems[this.dataset.type] = this.dataset.id; saveLocalFallback(); renderInventory(); showToast(`Equipped!`); }); });
 }
 
-// --- WALLET & WITHDRAWALS ---
+// ==========================================
+// WALLET & DATABASE CONNECTION
+// ==========================================
 window.onload = function() {
-  loadLocalFallback(); preloadShipImages();
+  loadLocalFallback(); preloadImages();
   document.getElementById('connectBtn').addEventListener('click', connectWallet);
-  document.getElementById('playBtn').addEventListener('click', () => { renderSelectShip(); showScreen('selectShipScreen'); }); // Go to select screen first!
-  document.getElementById('launchGameBtn').addEventListener('click', startGame); // Then start
+  document.getElementById('playBtn').addEventListener('click', () => { renderLoadout(); showScreen('selectShipScreen'); });
+  document.getElementById('launchGameBtn').addEventListener('click', startGame);
   document.getElementById('backFromSelect').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('storeBtn').addEventListener('click', () => { renderStore(); showScreen('storeScreen'); });
   document.getElementById('inventoryBtn').addEventListener('click', () => { renderInventory(); showScreen('inventoryScreen'); });
@@ -301,70 +348,40 @@ window.onload = function() {
   document.getElementById('backFromStore').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('backFromInv').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('backFromClaim').addEventListener('click', () => showScreen('mainMenu'));
-  document.getElementById('playAgainBtn').addEventListener('click', () => { renderSelectShip(); showScreen('selectShipScreen'); });
+  document.getElementById('playAgainBtn').addEventListener('click', () => { renderLoadout(); showScreen('selectShipScreen'); });
   document.getElementById('menuFromOver').addEventListener('click', () => showScreen('mainMenu'));
   document.getElementById('withdrawNowBtn').addEventListener('click', handleWithdraw);
-
   initStars(); requestAnimationFrame(menuLoop);
   if (typeof window.ethereum !== 'undefined') { window.ethereum.request({ method: 'eth_accounts' }).then(accs => { if (accs.length > 0) setupWalletUI(accs[0]); }).catch(()=>{}); }
 };
 
 async function connectWallet() {
-  if (typeof window.ethereum !== 'undefined') {
-    try { const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }); if (accounts.length > 0) await setupWalletUI(accounts[0]); } catch (err) { showToast("Wallet connection rejected."); }
-  } else { showToast("No Web3 Wallet."); }
+  if (typeof window.ethereum !== 'undefined') { try { const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }); if (accounts.length > 0) await setupWalletUI(accounts[0]); } catch (err) { showToast("Wallet rejected."); } } else { showToast("No Web3 Wallet found."); }
 }
-
 async function setupWalletUI(address) {
   playerWallet = address;
   document.getElementById('walletStatus').innerText = '✅ ' + playerWallet.substring(0, 6) + '...' + playerWallet.substring(38);
-  document.getElementById('walletStatus').style.color = '#0f8';
-  document.getElementById('connectBtn').classList.add('hidden');
+  document.getElementById('walletStatus').style.color = '#0f8'; document.getElementById('connectBtn').classList.add('hidden');
   ['playBtn', 'storeBtn', 'inventoryBtn', 'withdrawMenuBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-  await fetchDBData(); checkNFTMultiplier(); 
+  await fetchDBData(); checkNFTOwnership(); 
 }
-
 async function fetchDBData() {
   if(!playerWallet || !db) return;
-  try {
-    const { data } = await db.from('players').select('*').eq('wallet_address', playerWallet).single();
-    if (data) { totalSavedScore = Math.max(data.total_score || 0, totalSavedScore); savedDRC = Math.max(data.drc_balance || 0, savedDRC); saveLocalFallback(); } 
-    else { await db.from('players').insert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC }); }
-  } catch (e) { console.error(e); }
+  try { const { data } = await db.from('players').select('*').eq('wallet_address', playerWallet).single(); if (data) { totalSavedScore = Math.max(data.total_score || 0, totalSavedScore); savedDRC = Math.max(data.drc_balance || 0, savedDRC); saveLocalFallback(); } else { await db.from('players').insert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC }); } } catch (e) { console.error(e); }
 }
-
-async function checkNFTMultiplier() { nftMultiplier = 1.0; /* Keep base 1.0 for now */ }
-
 async function showClaimScreen() {
-  if(!playerWallet) return showToast("Connect wallet first!");
-  showScreen('claimScreen');
-  document.getElementById('claimWalletAddress').innerText = playerWallet;
-  document.getElementById('claimDrcAmount').innerText = savedDRC.toFixed(3) + " DRC";
+  if(!playerWallet) return showToast("Connect wallet first!"); showScreen('claimScreen');
+  document.getElementById('claimWalletAddress').innerText = playerWallet; document.getElementById('claimDrcAmount').innerText = savedDRC.toFixed(3) + " DRC";
   if (savedDRC >= 10000) { document.getElementById('withdrawNowBtn').classList.remove('hidden'); document.getElementById('withdrawWarn').classList.add('hidden'); } 
   else { document.getElementById('withdrawNowBtn').classList.add('hidden'); document.getElementById('withdrawWarn').classList.remove('hidden'); document.getElementById('withdrawWarn').innerText = `Need 10,000 DRC. You have ${savedDRC.toFixed(3)} DRC.`; }
 }
-
 async function handleWithdraw() { 
-  if(savedDRC < 10000) return;
-  showToast("Processing 10,000 DRC Withdrawal to BSC...");
-  
-  // Real withdrawal logic: Deduct from DB, in a real scenario you'd trigger a backend smart contract interaction here.
-  // For V3, we will deduct the balance and simulate the claim.
-  try {
-    savedDRC -= 10000;
-    totalSavedScore -= 10000000; // Deduct raw score equivalent
-    saveLocalFallback();
-    if(db && playerWallet) {
-      await db.from('players').upsert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC }, { onConflict: 'wallet_address' });
-    }
-    showClaimScreen(); // Refresh UI
-    showToast("SUCCESS! 10,000 DRC has been sent to your BSC wallet.");
-  } catch(e) {
-    showToast("Withdrawal failed. Try again.");
-  }
+  if(savedDRC < 10000) return; try { savedDRC -= 10000; totalSavedScore -= 10000000; saveLocalFallback(); if(db && playerWallet) await db.from('players').upsert({ wallet_address: playerWallet, total_score: totalSavedScore, drc_balance: savedDRC }, { onConflict: 'wallet_address' }); showClaimScreen(); showToast("SUCCESS! 10,000 DRC withdrawn to BSC."); } catch(e) { showToast("Withdrawal failed."); }
 }
 
-// --- GAME ENGINE ---
+// ==========================================
+// GAME ENGINE (DRAWING 128px SKINS)
+// ==========================================
 let shipConfig = { speed: 8, fireRate: 200, damage: 1 };
 const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
@@ -383,20 +400,20 @@ function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
 
 function drawShip(x, y) { 
   ctx.save(); ctx.translate(x, y);
-  const item = GAME_DATABASE.ships.find(s => s.id === myItems.ship);
-  
-  // V3: Draw NFT Image if loaded, else fallback to vector
-  if (shipImages[myItems.ship]) {
-    ctx.drawImage(shipImages[myItems.ship], -32, -32, 64, 64); // Draw 128x128 scaled to 64x64
-  } else {
-    const c = item.color; 
-    ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = c+'3'; 
-    ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); 
-  }
+  // Draws 128px image scaled down to 64x64 on the canvas
+  if (shipImages[myItems.ship]) { ctx.drawImage(shipImages[myItems.ship], -32, -32, 64, 64); } 
+  else { const c = GAME_DATABASE.ships.find(s => s.id === myItems.ship).color; ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = c+'3'; ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   ctx.shadowBlur = 0; ctx.restore(); 
 }
 
-function drawBullet(b) { const c = GAME_DATABASE.weapons.find(w => w.id === myItems.weapon).color; ctx.save(); ctx.shadowColor = c; ctx.shadowBlur = 10; ctx.fillStyle = c; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.restore(); }
+function drawBullet(b) { 
+  ctx.save();
+  // Draws 128px image scaled down to 16x32 on the canvas (stretched for bullet shape)
+  if (weaponImages[myItems.weapon]) { ctx.drawImage(weaponImages[myItems.weapon], b.x - 8, b.y - 16, 16, 32); } 
+  else { const c = GAME_DATABASE.weapons.find(w => w.id === myItems.weapon).color; ctx.shadowColor = c; ctx.shadowBlur = 10; ctx.fillStyle = c; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); }
+  ctx.restore(); 
+}
+
 function drawAsteroid(a) { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot); ctx.fillStyle = '#555'; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a.shape[0].x, a.shape[0].y); for (let i = 1; i < a.shape.length; i++) ctx.lineTo(a.shape[i].x, a.shape[i].y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
 function drawCoin(c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffa500'; ctx.beginPath(); ctx.arc(0, 0, c.r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 function drawBoss(b) { ctx.save(); ctx.translate(b.x, b.y); let hue = Math.min(currentLevel * 2, 200); ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 24; ctx.fillStyle = '#300'; ctx.strokeStyle = `hsl(${hue}, 100%, 40%)`; ctx.lineWidth = 2.5; ctx.fillRect(-b.w/2, -b.h/2, b.w, b.h); ctx.strokeRect(-b.w/2, -b.h/2, b.w, b.h); ctx.shadowBlur=0; ctx.fillStyle = '#300'; ctx.fillRect(-b.w/2-20, -b.h/2-18, b.w+40, 10); ctx.fillStyle = `hsl(${hue}, 100%, 40%)`; ctx.fillRect(-b.w/2-20, -b.h/2-18, (b.w+40)*(b.hp/b.maxHp), 10); ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.textAlign = 'center'; ctx.fillText(`LVL ${b.level} ${b.hp}/${b.maxHp}`, 0, -b.h/2-8); ctx.restore(); }
@@ -408,15 +425,14 @@ function spawnCoin() { coins.push({x:12+Math.random()*(W-24), y:-12, r:12, speed
 function spawnBoss() { let l=Math.min(currentLevel,200); boss={x:W/2,y:80,w:90,h:50,hp:200+(l*150),maxHp:200+(l*150),speed:1.5+(l*0.05),dir:1,fireRate:Math.max(150,900-(l*3.75)),level:l}; }
 function circleRect(cx,cy,cr,rx,ry,rw,rh){let nx=Math.max(rx-rw/2,Math.min(cx,rx+rw/2));let ny=Math.max(ry-rh/2,Math.min(cy,ry+rh/2));return Math.hypot(cx-nx,cy-ny)<cr;}
 
-function drawHUD() { let drc = (((score * nftMultiplier) + totalSavedScore) / 100000).toFixed(3); ctx.save(); ctx.font = 'bold 14px Orbitron'; ctx.textBaseline = 'top'; ctx.shadowColor = '#0ff'; ctx.shadowBlur = 8; ctx.fillStyle = '#0ff'; ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${score.toLocaleString()}`, 14, 12); ctx.shadowColor = '#f44'; ctx.fillStyle = '#f44'; ctx.textAlign = 'center'; ctx.fillText(`LVL: ${currentLevel}`, W / 2, 12); ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'right'; ctx.fillText(`DRC: ${drc}`, W - 14, 12); ctx.restore(); }
+function drawHUD() { let drc = (((score * nftMultiplier) + totalSavedScore) / 100000).toFixed(3); ctx.save(); ctx.font = 'bold 14px Orbitron'; ctx.textBaseline = 'top'; ctx.shadowColor = '#0ff'; ctx.shadowBlur = 8; ctx.fillStyle = '#0ff'; ctx.textAlign = 'left'; ctx.fillText(`SCORE: ${score.toLocaleString()}`, 14, 12); ctx.shadowColor = '#f44'; ctx.fillStyle = '#f44'; ctx.textAlign = 'center'; ctx.fillText(`LVL: ${currentLevel}`, W / 2, 12); ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'right'; ctx.fillText(`DRC: ${drc}`, W - 14, 12); if(nftMultiplier > 1) { ctx.fillStyle = '#0f8'; ctx.font = '10px Orbitron'; ctx.fillText(`x${nftMultiplier} NFT`, W - 14, 30); } ctx.restore(); }
 
 function menuLoop(timestamp) { if (state === 'playing') return; let dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); updateStars(dt); drawStars(); requestAnimationFrame(menuLoop); }
 
 function gameLoop(timestamp) {
   if (state !== 'playing') return;
   let dt = Math.min(timestamp - prevTimestamp, 50); prevTimestamp = timestamp;
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  updateStars(dt); drawStars();
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); updateStars(dt); drawStars();
   ship.x += (ship.targetX - ship.x) * Math.min(shipConfig.speed * 0.012 * dt, 1); ship.x = Math.max(24, Math.min(W - 24, ship.x));
   if (timestamp - lastBulletTime > shipConfig.fireRate) { bullets.push({x:ship.x-6,y:ship.y-20,speed:11},{x:ship.x+6,y:ship.y-20,speed:11}); lastBulletTime = timestamp; }
   if (timestamp - lastAsteroidTime > Math.max(600, 1800 - (currentLevel*8))) { spawnAsteroid(); lastAsteroidTime = timestamp; }
@@ -438,12 +454,8 @@ function startGame() { score = 0; currentLevel = 1; bullets=[];asteroids=[];coin
 
 async function triggerGameOver() {
   state = 'gameover'; if (animFrameId) cancelAnimationFrame(animFrameId);
-  let earnedScoreWithMultiplier = score * nftMultiplier;
-  let newTotal = totalSavedScore + earnedScoreWithMultiplier;
-  let newDRC = newTotal / 100000;
-  document.getElementById('goLevel').textContent = currentLevel;
-  document.getElementById('goScore').textContent = score.toLocaleString();
-  document.getElementById('goDRC').textContent = (earnedScoreWithMultiplier / 100000).toFixed(3);
+  let earnedScoreWithMultiplier = score * nftMultiplier; let newTotal = totalSavedScore + earnedScoreWithMultiplier; let newDRC = newTotal / 100000;
+  document.getElementById('goLevel').textContent = currentLevel; document.getElementById('goScore').textContent = score.toLocaleString(); document.getElementById('goDRC').textContent = (earnedScoreWithMultiplier / 100000).toFixed(3);
   totalSavedScore = newTotal; savedDRC = newDRC; saveLocalFallback();
   showScreen('gameOverScreen'); ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0, 0, W, H);
   prevTimestamp = performance.now(); requestAnimationFrame(menuLoop);

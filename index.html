@@ -101,7 +101,7 @@
         <button class="btn btn-gold" onclick="mintBatchPack()">MINT BATCH PACK</button>
       </div>
 
-      <div class="sub-text" style="margin-top: 20px;">INDIVIDUAL ITEMS</div>
+      <div class="sub-text" style="margin-top: 20px;">INDIVIDUAL NFTS</div>
       <div class="item-grid" id="storeShips"></div>
       <div class="item-grid" id="storeWeapons"></div>
     </div>
@@ -145,23 +145,32 @@
 const DEV_WALLET = "0x1332c3296aa604985110b3a375937e1ae12433a8"; // Your BNB receiving wallet
 const NFT_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; // REPLACE when you deploy to Element
 
+// ALL YOUR NFT SKINS MAPPED HERE!
 const GAME_DATABASE = {
   ships: [
-    // MAKE SURE THESE FILENAMES MATCH YOUR GITHUB REPO EXACTLY (case-sensitive!)
-    { id: 'standard', name: 'Standard', icon: '🚀', imageSrc: 'assets/ships/standard.png', price: 0, curr: 'FREE', color: '#0af', owned: true },
-    { id: 'neon', name: 'Neon Viper', icon: '✈️', imageSrc: 'assets/ships/neon.png', price: 0.01, curr: 'BNB', color: '#f0f', owned: false },
-    { id: 'void', name: 'Void Cruiser', icon: '🛸', imageSrc: 'assets/ships/void.png', price: 0.05, curr: 'BNB', color: '#808', owned: false }
+    { id: 'ship2', name: 'Standard', icon: '🚀', imageSrc: 'assets/ships/spaceship2x128.png', price: 0, curr: 'FREE', color: '#0af', owned: true },
+    { id: 'ship3', name: 'Neon Viper', icon: '✈️', imageSrc: 'assets/ships/spaceship3x128.png', price: 0.01, curr: 'BNB', color: '#f0f', owned: false },
+    { id: 'ship4', name: 'Void Cruiser', icon: '🛸', imageSrc: 'assets/ships/spaceship4x128.png', price: 0.05, curr: 'BNB', color: '#808', owned: false },
+    { id: 'ship5', name: 'Galaxy', icon: '🌀', imageSrc: 'assets/ships/spaceship5x128.png', price: 0.05, curr: 'BNB', color: '#48f', owned: false },
+    { id: 'ship6', name: 'Phoenix', icon: '🔥', imageSrc: 'assets/ships/spaceship6x128.png', price: 0.1, curr: 'BNB', color: '#f80', owned: false },
+    { id: 'ship7', name: 'Shadow', icon: '🌑', imageSrc: 'assets/ships/spaceship7x128.png', price: 0.1, curr: 'BNB', color: '#aaa', owned: false },
+    { id: 'ship9', name: 'Cyber', icon: '🤖', imageSrc: 'assets/ships/spaceship9x128.png', price: 0.2, curr: 'BNB', color: '#0ff', owned: false },
+    { id: 'ship10', name: 'Destroyer', icon: '⚔️', imageSrc: 'assets/ships/spaceship10x128.png', price: 0.2, curr: 'BNB', color: '#f44', owned: false },
+    { id: 'ship11', name: 'Nebula', icon: '🌌', imageSrc: 'assets/ships/spaceship11x128.png', price: 0.5, curr: 'BNB', color: '#a0f', owned: false },
+    { id: 'ship12', name: 'Quantum', icon: '💎', imageSrc: 'assets/ships/spaceship12x128.png', price: 0.5, curr: 'BNB', color: '#0f8', owned: false }
   ],
   weapons: [
-    { id: 'laser', name: 'Laser', icon: '💚', imageSrc: 'assets/weapons/greenyellowbullet128.png', price: 0, curr: 'FREE', color: '#0f0', owned: true },
-    { id: 'plasma', name: 'Plasma', icon: '🔵', imageSrc: 'assets/weapons/bluebullet128.png', price: 0.02, curr: 'BNB', color: '#08f', owned: false }
+    { id: 'weap_greenyellow', name: 'Laser', icon: '💚', imageSrc: 'assets/weapons/greenyellowbullet128.png', price: 0, curr: 'FREE', color: '#0f0', owned: true },
+    { id: 'weap_blue', name: 'Plasma', icon: '🔵', imageSrc: 'assets/weapons/bluebullet128.png', price: 0.01, curr: 'BNB', color: '#08f', owned: false },
+    { id: 'weap_green', name: 'Acid', icon: '🧪', imageSrc: 'assets/weapons/greenbullet128.png', price: 0.02, curr: 'BNB', color: '#0f0', owned: false },
+    { id: 'weap_purple', name: 'Railgun', icon: '⚡', imageSrc: 'assets/weapons/purplebullet128.png', price: 0.05, curr: 'BNB', color: '#a0f', owned: false }
   ]
 };
 
 let playerWallet = null; 
 let totalSavedScore = 0; 
 let savedDRC = 0;
-let myItems = { ship: 'standard', weapon: 'laser' }; 
+let myItems = { ship: 'ship2', weapon: 'weap_greenyellow' }; 
 let nftMultiplier = 1.0; 
 
 // Image Loaders for 128px PNGs
@@ -212,23 +221,16 @@ async function mintBatchPack() {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
     const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, BATCH_MINT_ABI, signer);
-
-    // IMPORTANT: Change these IDs to match your smart contract Token IDs on Element!
-    const ids = [1, 2]; 
-    const amounts = [1, 1]; 
+    const ids = [1, 2]; const amounts = [1, 1]; 
     const totalPrice = ethers.utils.parseEther("0.03"); 
-
     showToast("Opening Wallet... Confirm Batch Mint TX!");
     const tx = await nftContract.mintBatch(playerWallet, ids, amounts, "0x0", { value: totalPrice });
-    
     showToast("Minting Pack... Processing on BSC...");
     await tx.wait(); 
-    
-    let shipItem = GAME_DATABASE.ships.find(s => s.id === 'neon');
-    let weapItem = GAME_DATABASE.weapons.find(w => w.id === 'plasma');
+    let shipItem = GAME_DATABASE.ships.find(s => s.id === 'ship3');
+    let weapItem = GAME_DATABASE.weapons.find(w => w.id === 'weap_blue');
     if(shipItem) shipItem.owned = true;
     if(weapItem) weapItem.owned = true;
-    
     saveLocalFallback();
     showToast("🎉 Batch Mint Success! NFTs Unlocked!");
     renderStore(); 
@@ -244,10 +246,7 @@ async function checkNFTOwnership() {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, CHECK_BALANCE_ABI, provider);
     const balance = await nftContract.balanceOf(playerWallet);
-    if (balance.toNumber() > 0) {
-      nftMultiplier = 1.5; 
-      showToast("🌟 NFT Detected! x1.5 DRC Multiplier Active!");
-    } else { nftMultiplier = 1.0; }
+    if (balance.toNumber() > 0) { nftMultiplier = 1.5; showToast("🌟 NFT Detected! x1.5 DRC!"); } else { nftMultiplier = 1.0; }
   } catch(e) { console.error(e); }
 }
 
@@ -400,7 +399,6 @@ function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
 
 function drawShip(x, y) { 
   ctx.save(); ctx.translate(x, y);
-  // Draws 128px image scaled down to 64x64 on the canvas
   if (shipImages[myItems.ship]) { ctx.drawImage(shipImages[myItems.ship], -32, -32, 64, 64); } 
   else { const c = GAME_DATABASE.ships.find(s => s.id === myItems.ship).color; ctx.shadowColor = c; ctx.shadowBlur = 14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.fillStyle = c+'3'; ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(20, 14); ctx.lineTo(10, 10); ctx.lineTo(0, 14); ctx.lineTo(-10, 10); ctx.lineTo(-20, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   ctx.shadowBlur = 0; ctx.restore(); 
@@ -408,7 +406,6 @@ function drawShip(x, y) {
 
 function drawBullet(b) { 
   ctx.save();
-  // Draws 128px image scaled down to 16x32 on the canvas (stretched for bullet shape)
   if (weaponImages[myItems.weapon]) { ctx.drawImage(weaponImages[myItems.weapon], b.x - 8, b.y - 16, 16, 32); } 
   else { const c = GAME_DATABASE.weapons.find(w => w.id === myItems.weapon).color; ctx.shadowColor = c; ctx.shadowBlur = 10; ctx.fillStyle = c; ctx.fillRect(b.x - 2, b.y - 8, 4, 16); }
   ctx.restore(); 
